@@ -1,0 +1,42 @@
+%English dictionary
+\usepackage[english]{babel}
+%UTF-8 support, german special chars
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+%include graphics
+\usepackage[pdftex]{graphicx}
+%PFD links
+\usepackage[pdftex,plainpages=false,colorlinks,citecolor=black,linkcolor=black,urlcolor=black,bookmarksopen]{hyperref}
+\hypersetup{
+    pdftitle    = {\myTitle},
+    pdfsubject  = {Master's Thesis},
+    pdfkeywords = {},
+    pdfauthor   = {\textcopyright\ \myAuthor}
+}
+%Header and footer
+\usepackage[automark,komastyle,markusedcase]{scrpage2}
+%Embedded calculations
+\usepackage{calc}
+%Paragraphs as newlines instead of indentations
+\usepackage{parskip}
+%Support for \url, for correct URL rendering
+\usepackage{url}
+%Advanced Maths-symbols
+\usepackage{amssymb}
+%Advanced Maths-functions
+\usepackage[fleqn]{amsmath}
+%Floating figures in figure environment
+\usepackage{subfigure}
+
+\usepackage{multirow}
+
+\usepackage{listings}
+\usepackage[printonlyused]{acronym}
+
+\usepackage{expdlist}
+\usepackage{pdflscape}
+%ToDos
+\usepackage[colorinlistoftodos]{todonotes}
+%symbol shapes
+\usepackage{tikz}
+\usetikzlibrary{calc,shapes.multipart,arrows,shapes.misc}

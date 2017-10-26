@@ -1,0 +1,20 @@
+\select@language {english}
+\contentsline {chapter}{Todo list}{III}{section*.2}
+\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}
+\contentsline {section}{\numberline {1.1}Motivation}{1}{section.1.1}
+\contentsline {section}{\numberline {1.2}Goal}{2}{section.1.2}
+\contentsline {section}{\numberline {1.3}Structured approach}{2}{section.1.3}
+\contentsline {chapter}{\numberline {2}Background/Basics}{3}{chapter.2}
+\contentsline {section}{\numberline {2.1}Spherical Robot: Orbotix Sphero}{3}{section.2.1}
+\contentsline {section}{\numberline {2.2}Probabilistic robot movement and perception}{3}{section.2.2}
+\contentsline {section}{\numberline {2.3}Requirements}{4}{section.2.3}
+\contentsline {section}{\numberline {2.4}Related work}{4}{section.2.4}
+\contentsline {chapter}{\numberline {3}Concept}{5}{chapter.3}
+\contentsline {section}{\numberline {3.1}Measurement of error}{5}{section.3.1}
+\contentsline {section}{\numberline {3.2}Separation of environmental influences from inherent inaccuracy}{5}{section.3.2}
+\contentsline {section}{\numberline {3.3}Continuous improvement}{6}{section.3.3}
+\contentsline {section}{\numberline {3.4}Data-Distribution}{6}{section.3.4}
+\contentsline {chapter}{\numberline {4}Exemplary implementation}{7}{chapter.4}
+\contentsline {section}{\numberline {4.1}Ros Nodes}{7}{section.4.1}
+\contentsline {chapter}{\numberline {5}Evaluation}{9}{chapter.5}
+\contentsline {chapter}{\numberline {6}Future works}{11}{chapter.6}

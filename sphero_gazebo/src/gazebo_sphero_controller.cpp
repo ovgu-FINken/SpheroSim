@@ -126,7 +126,6 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     // listen to the update event (broadcast every simulation iteration)
     this->update_connection_ =
         event::Events::ConnectWorldUpdateBegin ( boost::bind ( &GazeboSpheroController::UpdateChild, this ) );
-
 }
 
 void GazeboSpheroController::Reset()
@@ -265,7 +264,6 @@ void GazeboSpheroController::cmdVelCallback ( const geometry_msgs::Twist::ConstP
     boost::mutex::scoped_lock scoped_lock ( lock );
     x_ = cmd_msg->linear.x;
     rot_ = cmd_msg->angular.z;
-
 }
 
 void GazeboSpheroController::QueueThread()
