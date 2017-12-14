@@ -64,6 +64,7 @@ namespace gazebo {
 
     private:
       void publishOdometry(double step_time);
+      void publishPosition(double step_time);
       void getWheelVelocities();
       void publishWheelTF(); /// publishes the wheel tf's
       void publishWheelJointState();
@@ -85,11 +86,13 @@ namespace gazebo {
 
       // ROS STUFF
       ros::Publisher odometry_publisher_;
+      ros::Publisher position_publisher_;
       ros::Subscriber cmd_vel_subscriber_;
       boost::shared_ptr<tf::TransformBroadcaster> transform_broadcaster_;
       sensor_msgs::JointState joint_state_;
       ros::Publisher joint_state_publisher_;
       nav_msgs::Odometry odom_;
+      geometry_msgs::Pose2D pose_;
       std::string tf_prefix_;
 
       boost::mutex lock;
@@ -97,6 +100,7 @@ namespace gazebo {
       std::string robot_namespace_;
       std::string command_topic_;
       std::string odometry_topic_;
+      std::string position_topic_;
       std::string odometry_frame_;
       std::string robot_base_frame_;
       bool publish_tf_;

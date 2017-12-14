@@ -49,6 +49,7 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
 
     gazebo_ros_->getParameter<std::string> ( command_topic_, "commandTopic", "cmd_vel" );
     gazebo_ros_->getParameter<std::string> ( odometry_topic_, "odometryTopic", "odom" );
+    gazebo_ros_->getParameter<std::string> ( position_topic_, "positionTopic", "Sphero1" );
     gazebo_ros_->getParameter<std::string> ( odometry_frame_, "odometryFrame", "odom" );
     gazebo_ros_->getParameter<std::string> ( robot_base_frame_, "robotBaseFrame", "base_footprint" );
     gazebo_ros_->getParameterBoolean ( publishWheelTF_, "publishWheelTF", false );
@@ -117,7 +118,11 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     {
       odometry_publisher_ = gazebo_ros_->node()->advertise<nav_msgs::Odometry>(odometry_topic_, 1);
       ROS_INFO("%s: Advertise odom on %s !", gazebo_ros_->info(), odometry_topic_.c_str());
+
+      position_publisher_ = gazebo_ros_->node()->advertise<geometry_msgs::Pose2D>(position_topic_, 1);
+      ROS_INFO("%s: Advertise position on %s !", gazebo_ros_->info(), position_topic_.c_str());
     }
+
 
     // start custom queue for diff drive
     this->callback_queue_thread_ =
@@ -198,7 +203,10 @@ void GazeboSpheroController::UpdateChild()
     double seconds_since_last_update = ( current_time - last_update_time_ ).Double();
 
     if ( seconds_since_last_update > update_period_ ) {
-        if (this->publish_tf_) publishOdometry ( seconds_since_last_update );
+        if (this->publish_tf_){
+            publishOdometry ( seconds_since_last_update );
+            publishPosition ( seconds_since_last_update );
+        }
         if ( publishWheelTF_ ) publishWheelTF();
         if ( publishWheelJointState_ ) publishWheelJointState();
 
@@ -319,6 +327,18 @@ void GazeboSpheroController::UpdateOdometryEncoder()
     odom_.twist.twist.angular.z = w;
     odom_.twist.twist.linear.x = dx/seconds_since_last_update;
     odom_.twist.twist.linear.y = dy/seconds_since_last_update;
+}
+
+void GazeboSpheroController::publishPosition ( double step_time )
+{
+    ros::Time current_time = ros::Time::now();
+    math::Pose world_pose = parent->GetWorldPose();
+    pose_.x = world_pose.pos.x;
+    pose_.y = world_pose.pos.y;
+    double theta = world_pose.rot.GetYaw() /** 180 / 3.14159265358979323846  /* pi */;
+    pose_.theta = 0;
+
+    position_publisher_.publish ( pose_ );
 }
 
 void GazeboSpheroController::publishOdometry ( double step_time )
