@@ -191,6 +191,16 @@ void GazeboSpheroController::UpdateChild()
        and Joint::Reset is called after ModelPlugin::Reset, so we need to set maxForce to wheel_torque other than GazeboSpheroController::Reset
        (this seems to be solved in https://bitbucket.org/osrf/gazebo/commits/ec8801d8683160eccae22c74bf865d59fac81f1e)
     */
+
+    /*
+        The real sphero takes velocity commands on a scale of 0 - 255.
+        Gazebo (through ros) takes velocity commands in rad/s.
+
+        At maximum linear velocity (255) of 2m/s and small wheel diameter of 2cm 
+            maximum angluar velocity: 200 rad/s
+        ==> scaling factor is 1.275^-1
+    */
+
     for ( int i = 0; i < 2; i++ ) {
       if ( fabs(wheel_torque -joints_[i]->GetParam ( "fmax", 0 )) > 1e-6 ) {
         joints_[i]->SetParam ( "fmax", 0, wheel_torque );
@@ -260,7 +270,7 @@ void GazeboSpheroController::getWheelVelocities()
 {
     boost::mutex::scoped_lock scoped_lock ( lock );
 
-    double vr = x_;
+    double vr = x_ / 1.275;
     double va = rot_;
 
     wheel_speed_[LEFT] = vr; // + va * wheel_separation_ / 2.0;
