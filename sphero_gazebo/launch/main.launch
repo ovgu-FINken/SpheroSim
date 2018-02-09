@@ -18,6 +18,6 @@
   </include>
 
   <!-- Launching the sphero robot -->
-  <include file="sphero.launch.xml" />
+  <include file="$(find sphero_gazebo)/launch/sphero.launch.xml" />
 
 </launch>

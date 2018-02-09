@@ -274,7 +274,7 @@ void GazeboSpheroController::getWheelVelocities()
     double va = rot_;
 
     wheel_speed_[LEFT] = vr; // + va * wheel_separation_ / 2.0;
-    wheel_speed_[RIGHT] =   - va * wheel_separation_ / 2.0;
+    wheel_speed_[RIGHT] =  - va * wheel_separation_ / 2.0;
 }
 
 void GazeboSpheroController::cmdVelCallback ( const geometry_msgs::Twist::ConstPtr& cmd_msg )
@@ -346,7 +346,7 @@ void GazeboSpheroController::publishPosition ( double step_time )
     pose_.x = world_pose.pos.x;
     pose_.y = world_pose.pos.y;
     double theta = world_pose.rot.GetYaw() /** 180 / 3.14159265358979323846  /* pi */;
-    pose_.theta = 0;
+    pose_.theta = theta;
 
     position_publisher_.publish ( pose_ );
 }

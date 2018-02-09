@@ -1,7 +1,7 @@
 <launch>
 
-  <arg name="x" default="0.0" />
-  <arg name="y" default="0.0" />
+  <arg name="x" default="0.2" />
+  <arg name="y" default="0.2" />
   <arg name="z" default="0.10" />
 
   <!-- URDF and TF support -->
