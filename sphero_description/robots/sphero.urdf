@@ -59,7 +59,7 @@
     <origin rpy="0 0 0" xyz="0 0 0" />
     <parent link="base_rotation_link" />
     <child link="base_direction_link" />
-    <axis xyz="1 0 0" />
+    <axis xyz="-1 0 0" />
     <limit effort="18.85" velocity="0.2" />
   </joint>
 

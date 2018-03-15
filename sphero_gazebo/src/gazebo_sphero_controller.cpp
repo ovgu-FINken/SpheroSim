@@ -47,7 +47,7 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     // Make sure the ROS node for Gazebo has already been initialized
     gazebo_ros_->isInitialized();
 
-    gazebo_ros_->getParameter<std::string> ( command_topic_, "commandTopic", "cmd_vel" );
+    gazebo_ros_->getParameter<std::string> ( command_topic_, "commandTopic", "sphero/cmd_vel" );
     gazebo_ros_->getParameter<std::string> ( odometry_topic_, "odometryTopic", "odom" );
     gazebo_ros_->getParameter<std::string> ( position_topic_, "positionTopic", "Sphero1" );
     gazebo_ros_->getParameter<std::string> ( odometry_frame_, "odometryFrame", "odom" );
@@ -56,9 +56,9 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     gazebo_ros_->getParameterBoolean ( publishWheelJointState_, "publishWheelJointState", false );
 
     gazebo_ros_->getParameter<double> ( wheel_separation_, "wheelSeparation", 0.34 );
-    gazebo_ros_->getParameter<double> ( wheel_diameter_, "wheelDiameter", 0.15 );
+    gazebo_ros_->getParameter<double> ( wheel_diameter_, "wheelDiameter", 0.1 );
     gazebo_ros_->getParameter<double> ( wheel_accel, "wheelAcceleration", 0.0 );
-    gazebo_ros_->getParameter<double> ( wheel_torque, "wheelTorque", 5.0 );
+    gazebo_ros_->getParameter<double> ( wheel_torque, "wheelTorque", 0.2 );
     gazebo_ros_->getParameter<double> ( update_rate_, "updateRate", 100.0 );
     std::map<std::string, OdomSource> odomOptions;
     odomOptions["encoder"] = ENCODER;
@@ -198,7 +198,7 @@ void GazeboSpheroController::UpdateChild()
 
         At maximum linear velocity (255) of 2m/s and small wheel diameter of 2cm 
             maximum angluar velocity: 200 rad/s
-        ==> scaling factor is 1.275^-1
+        ==> scaling factor is 1/1.275
     */
 
     for ( int i = 0; i < 2; i++ ) {
@@ -270,8 +270,8 @@ void GazeboSpheroController::getWheelVelocities()
 {
     boost::mutex::scoped_lock scoped_lock ( lock );
 
-    double vr = x_ / 1.275;
-    double va = rot_;
+    double vr = x_ * 0.75;
+    double va = rot_ * 0.75;
 
     wheel_speed_[LEFT] = vr; // + va * wheel_separation_ / 2.0;
     wheel_speed_[RIGHT] =  - va * wheel_separation_ / 2.0;
@@ -280,6 +280,7 @@ void GazeboSpheroController::getWheelVelocities()
 void GazeboSpheroController::cmdVelCallback ( const geometry_msgs::Twist::ConstPtr& cmd_msg )
 {
     boost::mutex::scoped_lock scoped_lock ( lock );
+    ROS_INFO("%s: cmd_vel received - linar.x : %g | angular.z : %g", gazebo_ros_->info(), cmd_msg->linear.x, cmd_msg->angular.z);
     x_ = cmd_msg->linear.x;
     rot_ = cmd_msg->angular.z;
 }
@@ -349,6 +350,8 @@ void GazeboSpheroController::publishPosition ( double step_time )
     pose_.theta = theta;
 
     position_publisher_.publish ( pose_ );
+
+    // ROS_INFO("%s: pose - x: %g | y: %g | theta: %g", gazebo_ros_->info(), pose_.x, pose_.y, pose_.theta);
 }
 
 void GazeboSpheroController::publishOdometry ( double step_time )
