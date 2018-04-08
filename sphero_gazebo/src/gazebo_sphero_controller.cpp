@@ -58,7 +58,7 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     gazebo_ros_->getParameter<double> ( wheel_separation_, "wheelSeparation", 0.34 );
     gazebo_ros_->getParameter<double> ( wheel_diameter_, "wheelDiameter", 0.1 );
     gazebo_ros_->getParameter<double> ( wheel_accel, "wheelAcceleration", 0.0 );
-    gazebo_ros_->getParameter<double> ( wheel_torque, "wheelTorque", 0.2 );
+    gazebo_ros_->getParameter<double> ( wheel_torque, "wheelTorque", 0.02 );
     gazebo_ros_->getParameter<double> ( update_rate_, "updateRate", 100.0 );
     std::map<std::string, OdomSource> odomOptions;
     odomOptions["encoder"] = ENCODER;
@@ -270,17 +270,17 @@ void GazeboSpheroController::getWheelVelocities()
 {
     boost::mutex::scoped_lock scoped_lock ( lock );
 
-    double vr = x_ * 0.75;
-    double va = rot_ * 0.75;
+    double vr = x_;
+    double va = rot_;
 
     wheel_speed_[LEFT] = vr; // + va * wheel_separation_ / 2.0;
-    wheel_speed_[RIGHT] =  - va * wheel_separation_ / 2.0;
+    wheel_speed_[RIGHT] = - va * wheel_separation_ / 2.0;
 }
 
 void GazeboSpheroController::cmdVelCallback ( const geometry_msgs::Twist::ConstPtr& cmd_msg )
 {
     boost::mutex::scoped_lock scoped_lock ( lock );
-    ROS_INFO("%s: cmd_vel received - linar.x : %g | angular.z : %g", gazebo_ros_->info(), cmd_msg->linear.x, cmd_msg->angular.z);
+    ROS_INFO("%s: cmd_vel - linar.x: %g  \t| angular.z: %g", gazebo_ros_->info(), cmd_msg->linear.x, cmd_msg->angular.z);
     x_ = cmd_msg->linear.x;
     rot_ = cmd_msg->angular.z;
 }
@@ -342,13 +342,24 @@ void GazeboSpheroController::UpdateOdometryEncoder()
 
 void GazeboSpheroController::publishPosition ( double step_time )
 {
-    ros::Time current_time = ros::Time::now();
     math::Pose world_pose = parent->GetWorldPose();
     pose_.x = world_pose.pos.x;
     pose_.y = world_pose.pos.y;
-    double theta = world_pose.rot.GetYaw() /** 180 / 3.14159265358979323846  /* pi */;
-    pose_.theta = theta;
-
+    // get the orientation from the simulation
+    double theta = world_pose.rot.GetYaw();
+    // convert to radians
+    /*
+    theta = theta * 180;
+    double fullTurn = 3.14159265358979323846 * 2;
+    // wrap for multiple turns
+    if(theta > fullTurn){
+        theta -= fullTurn;
+    }
+    if(theta < -fullTurn){
+        theta += fullTurn;
+    }
+    */
+    pose_.theta = theta * 180;
     position_publisher_.publish ( pose_ );
 
     // ROS_INFO("%s: pose - x: %g | y: %g | theta: %g", gazebo_ros_->info(), pose_.x, pose_.y, pose_.theta);
