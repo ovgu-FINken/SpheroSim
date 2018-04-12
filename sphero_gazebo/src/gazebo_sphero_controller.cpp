@@ -274,7 +274,7 @@ void GazeboSpheroController::getWheelVelocities()
     double va = rot_;
 
     wheel_speed_[LEFT] = vr; // + va * wheel_separation_ / 2.0;
-    wheel_speed_[RIGHT] = - va * wheel_separation_ / 2.0;
+    wheel_speed_[RIGHT] = va * wheel_separation_ / 2.0;
 }
 
 void GazeboSpheroController::cmdVelCallback ( const geometry_msgs::Twist::ConstPtr& cmd_msg )

@@ -18,9 +18,6 @@
       <geometry>
         <sphere radius="0.01"/>
       </geometry>
-      <material name="orange">
-        <color rgba="1 0 0 1"/>
-      </material>    
     </visual>
   </link>
 
@@ -48,10 +45,7 @@
       <origin rpy="0 0 0" xyz="0 0 0" />
       <geometry>
         <sphere radius="0.03"/>
-      </geometry>
-      <material name="blue">
-        <color rgba="0 0 .8 0.5"/>
-      </material>    
+      </geometry> 
     </visual>
   </link>
 
