@@ -17,7 +17,22 @@
     <arg name="headless" value="$(arg headless)"/>
   </include>
 
-  <!-- Launching the sphero robot -->
-  <include file="sphero.launch.xml" />
+  <!-- Launching the sphero robots -->
+  <group ns="sphero1">
+    <include file="$(find sphero_gazebo)/launch/sphero.launch.xml">
+      <arg name="index" value="1" />
+      <arg name="x" value="1.0" />
+      <arg name="y" value="1.0" />
+    </include>
+  </group>
 
+<!--
+  <group ns="sphero2">
+    <include file="$(find sphero_gazebo)/launch/sphero.launch.xml">
+      <arg name="index" value="2" />
+      <arg name="x" value="0.5" />
+      <arg name="y" value="0.5" />
+    </include>
+  </group>
+-->
 </launch>

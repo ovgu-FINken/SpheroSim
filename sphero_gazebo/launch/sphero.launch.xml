@@ -1,18 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
 <launch>
-
+  <arg name="index" default="1" />
   <arg name="x" default="0.0" />
   <arg name="y" default="0.0" />
-  <arg name="z" default="0.10" />
+  <arg name="z" default="0.03" />
 
   <!-- URDF and TF support -->
-  <param name="robot_description" command="$(find xacro)/xacro $(find sphero_description)/robots/sphero.gazebo.xacro" />
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" >
+  <param name="robot_description" command="$(find xacro)/xacro '$(find sphero_description)/robots/sphero.gazebo.xacro' prefix:=$(arg index)" />
+  <node name="robot$(arg index)_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" >
     <param name="publish_frequency" value="10.0"/>
   </node>
 
   <!-- Put a robot in gazebo, make it look pretty -->
-  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
-        args="-urdf -x $(arg x) -y $(arg y) -z $(arg z) -model sphero -param robot_description"/>
+  <node name="urdf_spawner$(arg index)" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+        args="-urdf -x $(arg x) -y $(arg y) -z $(arg z) -model sphero$(arg index) -param robot_description"/>
 <!-- -file $(find sphero_description)/robots/sphero.urdf -->
 
 </launch>

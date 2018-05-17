@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="sphero" >
   
   <xacro:include filename="sphero.urdf" />
@@ -53,9 +54,10 @@
       <wheelSeparation>0.025</wheelSeparation>
       <wheelDiameter>0.01</wheelDiameter>
       <torque>0.025</torque>
-      <commandTopic>/cmd_vel</commandTopic>
-      <odometryTopic>/odom</odometryTopic>
-      <odometryFrame>/odom_frame</odometryFrame>
+      <commandTopic>cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom_frame</odometryFrame>
+      <positionTopic>pos</positionTopic>
       <publishWheelJointState>true</publishWheelJointState>
       <odometrySource>world</odometrySource>
       <robotBaseFrame>base_link</robotBaseFrame>
@@ -66,7 +68,7 @@
   <!-- imu -->
   <gazebo>
     <plugin name="gazebo_ros_imu_controller" filename="libgazebo_ros_imu.so">
-      <robotNamespace>/sphero/</robotNamespace>
+      <robotNamespace>/sphero$(arg prefix)/</robotNamespace>
       <topicName>imu/data3</topicName>
       <serviceName>imu/service</serviceName>
       <bodyName>base_link</bodyName>
