@@ -30,7 +30,7 @@
     <rosparam file="$(find sphero_nav_glue)/config/costmap_local.yaml" command="load" ns="local_costmap" />
     <!-- static global costmap, static map provides size -->
     <rosparam file="$(find sphero_nav_glue)/config/costmap_global_static.yaml" command="load" ns="global_costmap" />
-    <!--  -->
+    <!-- robot base frames with parameterized tf_prefixes -->
     <param name="~/global_costmap/robot_base_frame" value="sphero$(arg index)/base_rotation_link" />
     <param name="~/local_costmap/robot_base_frame" value="sphero$(arg index)/base_rotation_link" />
   </node>
