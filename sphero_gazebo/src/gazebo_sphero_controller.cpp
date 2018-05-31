@@ -50,7 +50,7 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     gazebo_ros_->getParameter<std::string> ( command_topic_, "commandTopic", "cmd_vel" );
     gazebo_ros_->getParameter<std::string> ( odometry_topic_, "odometryTopic", "odom" );
     gazebo_ros_->getParameter<std::string> ( position_topic_, "positionTopic", "pos" );
-    gazebo_ros_->getParameter<std::string> ( odometry_frame_, "odometryFrame", "odom_frame" );
+    gazebo_ros_->getParameter<std::string> ( odometry_frame_, "odometryFrame", "/odom_frame" );
     gazebo_ros_->getParameter<std::string> ( robot_base_frame_, "robotBaseFrame", "base_footprint" );
     gazebo_ros_->getParameterBoolean ( publishWheelTF_, "publishWheelTF", false );
     gazebo_ros_->getParameterBoolean ( publishWheelJointState_, "publishWheelJointState", false );

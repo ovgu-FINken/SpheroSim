@@ -2,7 +2,6 @@ footprint: [[0.04330790472027315, 0.024988505132155125], [3.9816335536652065e-05
 footprint_padding: 0.01
 robot_radius: 0.2
 
-robot_base_frame: base_rotation_link
 update_frequency: 0.5
 publish_frequency: 0.4
 transform_tolerance: 0.5

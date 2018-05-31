@@ -56,7 +56,7 @@
       <torque>0.025</torque>
       <commandTopic>cmd_vel</commandTopic>
       <odometryTopic>odom</odometryTopic>
-      <odometryFrame>odom_frame</odometryFrame>
+      <odometryFrame>/odom_frame</odometryFrame>
       <positionTopic>pos</positionTopic>
       <publishWheelJointState>true</publishWheelJointState>
       <odometrySource>world</odometrySource>
@@ -68,7 +68,7 @@
   <!-- imu -->
   <gazebo>
     <plugin name="gazebo_ros_imu_controller" filename="libgazebo_ros_imu.so">
-      <robotNamespace>/sphero$(arg prefix)/</robotNamespace>
+      <robotNamespace>/sphero$(arg prefix)</robotNamespace>
       <topicName>imu/data3</topicName>
       <serviceName>imu/service</serviceName>
       <bodyName>base_link</bodyName>
