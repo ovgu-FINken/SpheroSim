@@ -1,0 +1,20 @@
+footprint: [[0.04330790472027315, 0.024988505132155125], [3.9816335536652065e-05, 0.049999984146591736],[-0.043268051778472906, 0.025057447900681897],[-0.043347647809627646, -0.024919498979162562],[-0.00011944890561403252, -0.0499998573193859],[0.043228089085315696, -0.025126327109866467]]
+footprint_padding: 0.01
+robot_radius: 0.2
+
+robot_base_frame: base_rotation_link
+update_frequency: 0.5
+publish_frequency: 0.4
+transform_tolerance: 0.5
+
+resolution: 0.02
+
+obstacle_range: 1
+raytrace_range: 1
+
+#layer definitions
+static:
+    map_topic: /map
+    subscribe_to_updates: true
+inflation:
+    inflation_radius: 0.05
