@@ -43,7 +43,7 @@
 
     <gui fullscreen="0">
       <camera name="user_camera">
-        <pose>1.152670 -0.041479 3.496780 0.000000 1.123640 3.132190</pose>
+        <pose>2.152670 4.041479 3.496780 0.000000 1.123640 3.132190</pose>
         <view_controller>orbit</view_controller>
       </camera>
     </gui>
