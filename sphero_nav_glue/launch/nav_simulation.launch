@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" respawn="true" args="0 0 0 0 0 0 /map /odom_frame 1000" />
+  
+  <!-- load static map -->
+  <node pkg="map_server" type="map_server" name="map_server" respawn="true" args="$(find sphero_nav_glue)/config/map_tpnavstack.yaml">
+    <param name="frame_id" value="map" />
+  </node>
+
+  <!-- load ROS navigation planners -->
+  <arg name="base_global_planner" default="navfn/NavfnROS"/>
+  <arg name="base_local_planner" default="base_local_planner/TrajectoryPlannerROS"/>
+
+  <!-- load ROS navigation core node -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+
+    <param name="base_global_planner" value="$(arg base_global_planner)"/>
+    <param name="base_local_planner" value="$(arg base_local_planner)"/>  
+    <param name="clearing_rotation_allowed" value="false"/>  
+    <rosparam file="$(find sphero_nav_glue)/config/planner.yaml" command="load"/>
+
+    <rosparam file="$(find sphero_nav_glue)/config/costmap_common.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find sphero_nav_glue)/config/costmap_common.yaml" command="load" ns="local_costmap" />
+
+    <!-- local costmap, needs size -->
+    <rosparam file="$(find sphero_nav_glue)/config/costmap_local.yaml" command="load" ns="local_costmap" />
+
+    <!-- static global costmap, static map provides size -->
+    <rosparam file="$(find sphero_nav_glue)/config/costmap_global_static.yaml" command="load" ns="global_costmap" />
+  </node>
+</launch>

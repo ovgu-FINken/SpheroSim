@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<launch>
+  <param name="robot_description" textfile='$(find sphero_description)/robots/sphero.urdf' />
+
+  <!-- start up cameras -->
+  <node name="camera_manager" pkg="nodelet" type="nodelet" args="manager"/><!-- launch-prefix="gdbserver once :1234 "/-->
+  <node name="cam0" pkg="nodelet" type="nodelet" args="load camera_pylon/Camera camera_manager">
+    <param name="ExposureTimeAbs" value="5000"/>
+  </node>
+  <!-- start up position tracking -->
+  <node name="pose_sphero" type="pose_sphero.py" pkg="tracking" respawn="true">
+    <param name="homography_file" value="$(find sphero_nav_glue)/config/sphero.npy"/>
+  </node>
+
+  <!-- start up filter -->
+  <node name="sphero_filter" type="sphero_filter.py" pkg="sphero_nav_glue" respawn="true">
+  </node>
+
+  <!-- connect sphero -->
+  <group ns="sphero">
+    <node pkg="sphero_node" type="sphero.py" name="sphero_node" respawn="true"/>
+      <rosparam param="target_addr">"D3:17:E7:F0:72:E7"</rosparam>
+      <rosparam param="connect_red">255</rosparam>
+      <rosparam param="connect_blue">255</rosparam>
+      <rosparam param="connect_green">255</rosparam>
+      <rosparam param="diag_update_rate">30.0</rosparam>
+      <rosparam param="port">1</rosparam>
+      <rosparam param="data">False</rosparam>
+      <rosparam param="frameid">odom</rosparam>
+      <rosparam param="base">sphero/</rosparam>
+      <rosparam param="LE">True</rosparam>
+   </group>
+
+  <!-- keep that sphero awake even when not moving -->
+  <node pkg="sphero_nav_glue" type="sphero_stay_awake.py" name="sphero_stay_awake" respawn="true">
+    <!-- <param name="topic_name" value="sphero/set_color" /> -->
+    <!-- <param name="color" value="red" /> -->
+  </node>
+  <!-- calculate and publish transforms -->
+  <node pkg="sphero_nav_glue" type="sphero_tf_pub.py" name="sphero_tf_pub" respawn="true" />
+
+  <!-- load static map -->
+  <node pkg="map_server" type="map_server" name="map_server" respawn="true" args="$(find sphero_nav_glue)/config/map_tpnavstack.yaml">
+    <param name="frame_id" value="map" />
+  </node>
+
+  <node pkg="sphero_nav_glue" type="sphero_twist.py" name="sphero_twist" respawn="true" />
+  <!-- load ROS navigation planners -->
+  <arg name="base_global_planner" default="navfn/NavfnROS"/>
+  <!-- <arg name="base_local_planner" default="dwa_local_planner/DWAPlannerROS"/> -->
+  <arg name="base_local_planner" default="base_local_planner/TrajectoryPlannerROS"/>
+
+  <!-- load ROS navigation core node -->
+  <!-- <remap from="cmd_vel" to="sphero/cmd_vel"/> -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+
+    <param name="base_global_planner" value="$(arg base_global_planner)"/>
+    <param name="base_local_planner" value="$(arg base_local_planner)"/>  
+    <param name="clearing_rotation_allowed" value="false"/>  
+    <rosparam file="$(find sphero_nav_glue)/config/planner.yaml" command="load"/>
+
+    <rosparam file="$(find sphero_nav_glue)/config/costmap_common.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find sphero_nav_glue)/config/costmap_common.yaml" command="load" ns="local_costmap" />
+
+    <!-- local costmap, needs size -->
+    <rosparam file="$(find sphero_nav_glue)/config/costmap_local.yaml" command="load" ns="local_costmap" />
+
+    <!-- static global costmap, static map provides size -->
+    <rosparam file="$(find sphero_nav_glue)/config/costmap_global_static.yaml" command="load" ns="global_costmap" />
+  </node>
+</launch>

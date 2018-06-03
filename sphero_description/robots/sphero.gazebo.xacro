@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="sphero" >
   
   <xacro:include filename="sphero.urdf" />
@@ -33,7 +34,6 @@
     <minDepth>0.0005</minDepth>
   </gazebo>
 
-
   <gazebo reference="rotation_joint">
     <implicitSpringDamper>1</implicitSpringDamper>
   </gazebo>
@@ -41,7 +41,6 @@
   <gazebo reference="direction_joint">
     <implicitSpringDamper>1</implicitSpringDamper>
   </gazebo>
-
 
   <!-- Differencial drive plugin modified for a sphero robot -->
   <gazebo>
@@ -55,10 +54,10 @@
       <wheelAcceleration>0</wheelAcceleration>
       <wheelTorque>0.02</wheelTorque>
       <torque>0.025</torque>
-      <commandTopic>/cmd_vel</commandTopic>
-      <odometryTopic>/odom</odometryTopic>
-      <positionTopic>Sphero1</positionTopic>
+      <commandTopic>cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
       <odometryFrame>/odom_frame</odometryFrame>
+      <positionTopic>pos</positionTopic>
       <publishWheelJointState>true</publishWheelJointState>
       <publishWheelTF>false</publishWheelTF>
       <odometrySource>world</odometrySource>
@@ -66,11 +65,10 @@
     </plugin>
   </gazebo>
 
-
   <!-- imu -->
   <gazebo>
     <plugin name="gazebo_ros_imu_controller" filename="libgazebo_ros_imu.so">
-      <robotNamespace>/sphero/</robotNamespace>
+      <robotNamespace>/sphero$(arg prefix)</robotNamespace>
       <topicName>imu/data3</topicName>
       <serviceName>imu/service</serviceName>
       <bodyName>base_link</bodyName>

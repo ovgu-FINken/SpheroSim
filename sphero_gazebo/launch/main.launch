@@ -17,7 +17,52 @@
     <arg name="headless" value="$(arg headless)"/>
   </include>
 
-  <!-- Launching the sphero robot -->
-  <include file="$(find sphero_gazebo)/launch/sphero.launch.xml" />
+  <!-- spawn static map server -->
+  <node pkg="map_server" type="map_server" name="map_server" respawn="true" args="$(find sphero_nav_glue)/config/map_tpnavstack.yaml">
+    <param name="frame_id" value="map" />
+  </node>
 
+  <!-- spawn static transform from map to odom frame -->
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" respawn="true" args="0 0 0 0 0 0 /map /odom_frame 1000" />
+
+  <!-- Launching everything needed per sphero robot -->
+  <group ns="sphero1">
+    <include file="$(find sphero_gazebo)/launch/sphero.launch.xml">
+      <arg name="index" value="1" />
+      <arg name="x" value="1.0" />
+      <arg name="y" value="1.0" />
+    </include>
+  </group>
+
+  <group ns="sphero2">
+    <include file="$(find sphero_gazebo)/launch/sphero.launch.xml">
+      <arg name="index" value="2" />
+      <arg name="x" value="0.5" />
+      <arg name="y" value="0.5" />
+    </include>
+  </group>
+
+  <group ns="sphero3">
+    <include file="$(find sphero_gazebo)/launch/sphero.launch.xml">
+      <arg name="index" value="3" />
+      <arg name="x" value="1.5" />
+      <arg name="y" value="0.5" />
+    </include>
+  </group>
+  
+  <group ns="sphero4">
+    <include file="$(find sphero_gazebo)/launch/sphero.launch.xml">
+      <arg name="index" value="4" />
+      <arg name="x" value="0.5" />
+      <arg name="y" value="1.5" />
+    </include>
+  </group>
+  
+  <group ns="sphero5">
+    <include file="$(find sphero_gazebo)/launch/sphero.launch.xml">
+      <arg name="index" value="5" />
+      <arg name="x" value="1.5" />
+      <arg name="y" value="1.5" />
+    </include>
+  </group>
 </launch>
