@@ -34,7 +34,6 @@
     <minDepth>0.0005</minDepth>
   </gazebo>
 
-
   <gazebo reference="rotation_joint">
     <implicitSpringDamper>1</implicitSpringDamper>
   </gazebo>
@@ -42,7 +41,6 @@
   <gazebo reference="direction_joint">
     <implicitSpringDamper>1</implicitSpringDamper>
   </gazebo>
-
 
   <!-- Differencial drive plugin modified for a sphero robot -->
   <gazebo>
@@ -63,7 +61,6 @@
       <robotBaseFrame>base_link</robotBaseFrame>
     </plugin>
   </gazebo>
-
 
   <!-- imu -->
   <gazebo>
