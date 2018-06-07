@@ -1,0 +1,7 @@
+Header header
+geometry_msgs/Point point
+---
+uint32 age
+uint8 quality
+int16 linearError
+int16 angularError
