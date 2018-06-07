@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>mapping_node</name>
+  <name>error_mapping</name>
   <version>0.0.1</version>
-  <description>The mapping_node package used to create a centralized error map from nominal-actual comparison of robot's movements.</description>
+  <description>The error_mapping package used to create a centralized error map from nominal-actual comparison of robot's movements.</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -53,11 +53,11 @@
   <exec_depend>message_runtime</exec_depend>
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>geometry_msgs</build_depend>
-  <build_depend>rospy</build_depend>
+  <build_depend>roscpp</build_depend>
   <build_export_depend>geometry_msgs</build_export_depend>
-  <build_export_depend>rospy</build_export_depend>
+  <build_export_depend>roscpp</build_export_depend>
   <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>rospy</exec_depend>
+  <exec_depend>roscpp</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
