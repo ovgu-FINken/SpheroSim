@@ -6,6 +6,8 @@ Input:
 		TargetPose (Odometry-Message)
 		RealPose (Odometry-Message)
 	Request for specific position
+	Request for exploration-target
+		currentPosition
 
 Output:
 	Complete Map
@@ -15,6 +17,9 @@ Output:
 		Angular Error
 		Data Age --> contained in quality?
 		Data Quality
+	Exploration-target
+		weighted by "un-exploredness" & distance
+
 
 Calculations:
 	compare planned vs. real

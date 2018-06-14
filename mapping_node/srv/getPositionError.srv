@@ -3,5 +3,5 @@ geometry_msgs/Point point
 ---
 uint32 age
 uint8 quality
-int16 linearError
-int16 angularError
+int32 linearError
+int32 angularError
