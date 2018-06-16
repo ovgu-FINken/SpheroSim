@@ -1,22 +1,30 @@
-using namespace mapping_node;
+#include "include/ErrorCell.h"
 
-///
-/// Definition for a single cell of the error map.
-///
-class ErrorCell {
-		/// The history of all reported error messages concerning this cell.
-		std::list<errorInsert> history
-		/// Computes the error from the history of error reports on this cell with respect to the maximum age of reports.
-		ErrorInformation aggregateError(int);
-	public:
-		ErrorCell();
-		~ErrorCell();
-		/// The position of the cell on the map in x dimension
-		int x;
-		/// The position of the cell on the map in y dimension
-		int y;
-		/// Inserts the reported error into the history and updates the aggrated error.
-		void insert_report(errorInsert);
-		/// retrieves the aggregated error information for this cell.
-		ErrorInformation get_error();
+
+ErrorCell::ErrorCell(int x, int y){
+	this.x = x;
+	this.y = y;
+}
+
+void ErrorCell::insert_report(errorInsert& error){
+	history.push_back(error);
+}
+
+ErrorInformation ErrorCell::aggregateError(int historyLength){
+	int limit = history.size();
+	if(historyLength > 0 && historyLength < limit){
+		limit = historyLength;
+	}
+	ErrorInformation error = new ErrorInformation();
+	/*
+	error.quality = 0;
+	error.linearError = 0;
+	error.angularError = 0;
+	error.age = 0;
+	*/
+	for (int i = 0; i < limit; ++i)
+	{
+		errorInsert item = history[i];
+		int itemLinearError = 
+	}
 }
