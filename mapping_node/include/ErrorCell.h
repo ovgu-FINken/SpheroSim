@@ -9,10 +9,10 @@ using namespace mapping_node;
 class ErrorCell {
 	private:
 		/// The history of all reported error messages concerning this cell.
-		std::vector<errorInsert> history;
+		std::vector<ErrorInformation> history;
 		
 		/// Computes the error from the history of error reports on this cell with respect to the maximum age of reports.
-		ErrorInformation aggregateError(int);
+		ErrorInformation* aggregateError(int);
 	public:
 		ErrorCell();
 		~ErrorCell();
@@ -24,8 +24,8 @@ class ErrorCell {
 		int y;
 		
 		/// Inserts the reported error into the history and updates the aggrated error.
-		void insert_report(errorInsert);
+		void insert_report(ErrorInformation);
 		
 		/// retrieves the aggregated error information for this cell.
-		ErrorInformation get_error();
+		ErrorInformation* get_error();
 }

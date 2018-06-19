@@ -6,11 +6,11 @@ ErrorCell::ErrorCell(int x, int y){
 	this.y = y;
 }
 
-void ErrorCell::insert_report(errorInsert& error){
+void ErrorCell::insert_report(ErrorInformation& error){
 	history.push_back(error);
 }
 
-ErrorInformation ErrorCell::aggregateError(int historyLength){
+ErrorInformation* ErrorCell::aggregateError(int historyLength){
 	int limit = history.size();
 	if(historyLength > 0 && historyLength < limit){
 		limit = historyLength;
@@ -25,6 +25,12 @@ ErrorInformation ErrorCell::aggregateError(int historyLength){
 	for (int i = 0; i < limit; ++i)
 	{
 		errorInsert item = history[i];
-		int itemLinearError = 
+		int itemLinearError = ((error.linearError * (i - 1)) + item.linearError) / i;
+		int itemAngularError = ((error.angularError * (i - 1)) + item.angularError) / i;
 	}
+	return &error;
+}
+
+ErrorInformation* ErrorCell::get_error(){
+	return this.aggregateError(-1);
 }

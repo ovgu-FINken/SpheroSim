@@ -19,7 +19,15 @@ bool insert_error(errorInsert::Request &request, errorInsert::Response &response
 	int request_y = request.planned_pose.linear.y;
 	int cellIndex = (MAPSIZE_HORIZONTAL * request.y) + (request_x % MAPSIZE_HORIZONTAL);
 	ErrorCell *insertCeĺl = map[cellIndex];
-	insertCeĺl.insert_report(request);
+	ErrorInformation report = new ErrorInformation();
+	report.age = ros::Time.now().ToSec();
+	report.quality++;
+	// TODO: calculate distance
+	//report.linearError = Math::abs(request.planned_pose - request.actual_pose);
+	// TODO: calculate angular distance
+	//report.linearError = Math::abs(request.planned_velocities - request.actual_velocities);
+	insertCeĺl.insert_report(report);
+	return true;
 }
 
 ///
@@ -27,7 +35,16 @@ bool insert_error(errorInsert::Request &request, errorInsert::Response &response
 ///
 bool get_point_error (getPositionError::Request &request, getPositionError::Response &response)
 {
-
+	int request_x = request.point.x;
+	int request_y = request.point.y;
+	int cellIndex = (MAPSIZE_HORIZONTAL * request.y) + (request_x % MAPSIZE_HORIZONTAL);
+	ErrorCell *requestCeĺl = map[cellIndex];
+	ErrorInformation *erroInfo = requestCeĺl.get_error();
+	response.age = erroInfo.age;
+	response.quality = erroInfo.quality;
+	response.linearError = erroInfo.linearError;
+	response.angularError = errorInfo.angularError;
+	return true;
 }
 
 ///
