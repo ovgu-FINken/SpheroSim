@@ -1,3 +1,6 @@
+#ifndef ErrorCell_H
+#define ErrorCell_H
+
 #include "mapping_node/errorInsert.h"
 #include <vector>
 
@@ -29,3 +32,5 @@ class ErrorCell {
 		/// retrieves the aggregated error information for this cell.
 		ErrorInformation* get_error();
 }
+
+#endif

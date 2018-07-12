@@ -1,3 +1,7 @@
+
+#ifndef ErrorInformation_H
+#define ErrorInformation_H
+
 using namespace mapping_node;
 
 ///
@@ -17,3 +21,5 @@ struct ErrorInformation
 	/// The time since the error was updated.
 	int age;
 };
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef ErrorMapGridCell_H
+#define ErrorMapGridCell_H
+
 using namespace mapping_node;
 
 ///
@@ -26,3 +29,6 @@ struct ErrorMapGridCell
 	/// The y coordinate of the cell on the map.
 	int y;
 };
+
+
+#endif

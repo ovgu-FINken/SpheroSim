@@ -1,6 +1,10 @@
 #include "ros/ros.h"
+#include "tf/transform_datatypes.h"
+#include "Transform.h"
+
 #include "mapping_node/errorInsert.h"
 #include "mapping_node/getPositionError.h"
+
 #include <vector>
 
 using namespace mapping_node;
@@ -17,15 +21,20 @@ bool insert_error(errorInsert::Request &request, errorInsert::Response &response
 {
 	int request_x = request.planned_pose.linear.x;
 	int request_y = request.planned_pose.linear.y;
+	// find the correct cell in the map to update
 	int cellIndex = (MAPSIZE_HORIZONTAL * request.y) + (request_x % MAPSIZE_HORIZONTAL);
 	ErrorCell *insertCeĺl = map[cellIndex];
-	ErrorInformation report = new ErrorInformation();
+	// define the data for the update
+	ErrorInformation report;
 	report.age = ros::Time.now().ToSec();
-	report.quality++;
-	// TODO: calculate distance
-	//report.linearError = Math::abs(request.planned_pose - request.actual_pose);
-	// TODO: calculate angular distance
-	//report.linearError = Math::abs(request.planned_velocities - request.actual_velocities);
+	// transform the data to calculate difference
+	tf::Transform plannedTf;
+	tf::poseMsgToTF(request.planned_pose, plannedTf);
+	tf::Transform actualTf;
+	tf::poseMsgToTF(request.actual_pose, actualTf);
+	// calculate the difference between planned and actual
+	tf::Transform difference = actualTf.inverseTimes(plannedTf)
+	// TODO: handle the difference-transform to put it into the error report.
 	insertCeĺl.insert_report(report);
 	return true;
 }
