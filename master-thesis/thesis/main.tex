@@ -1,0 +1,106 @@
+\documentclass[twoside, 12pt, a4paper, openright, fleqn, cleardoublepage=empty]{scrreprt}
+\input{definitions}
+\input{packages}
+
+\pdfcompresslevel=9
+
+\makeatletter
+\providecommand*{\toclevel@algorithm}{0}
+\makeatother
+\textwidth 14cm
+\textheight 21cm
+\headsep 3em
+\headheight 1em
+\evensidemargin 1cm
+\oddsidemargin 1cm
+\setlength{\parskip}{1.5ex plus 0.5ex minus 0.5ex}
+\pagestyle{scrheadings}
+\setlength{\headheight}{3\baselineskip}
+\setheadsepline{.4pt}
+\DeclareGraphicsExtensions{.jpg,.pdf,bmp,.png}
+
+% This is 'SCHUSTER.STY' as of 25. March 1990
+%
+% Disable single lines at the start of a paragraph (Schusterjungen)
+\clubpenalty = 10000
+%
+% Disable single lines at the end of a paragraph (Hurenkinder)
+\widowpenalty = 10000 \displaywidowpenalty = 10000
+
+%====================%
+% document meta-data %
+%====================%
+\title{\myTitle}
+\author{\myAuthor}
+\date{\today}
+
+%=====================%
+% the actual document %
+%=====================%
+\begin{document}
+
+%==========%
+% PREAMBLE %
+%==========%
+\input{title}
+\sloppy
+\pagenumbering{Roman}
+
+\deftripstyle{chap}[0pt][0.5pt]{}{}{}{}{\pagemark}{}
+\deftripstyle{nonChap}[0pt][0.5pt]{}{}{\headmark}{}{\pagemark}{}
+\renewcommand*{\chapterpagestyle}{chap}
+\pagestyle{nonChap}
+
+
+%==========%
+% ABSTRACT %
+%==========%
+\chapter*{Abstract}
+\input{chapters/abstract}
+\cleardoublepage
+
+
+%===============%
+% LIST OF TODOS %
+%===============%
+\renewcommand{\baselinestretch}{1.2}
+\small\normalsize
+\todototoc
+\listoftodos
+\renewcommand{\baselinestretch}{1}
+\small\normalsize
+\cleardoublepage
+
+%===================%
+% TABLE OF CONTENTS %
+%===================%
+\renewcommand{\baselinestretch}{1.2}
+\small\normalsize
+\tableofcontents
+\renewcommand{\baselinestretch}{1}
+\small\normalsize
+\cleardoublepage
+
+%=========%
+% CONTENT %
+%=========%
+\automark[section]{chapter}
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\input{content}
+
+%==============%
+% BIBLIOGRAPHY %
+%==============%
+
+\cleardoublepage
+\bibliographystyle{plain}
+\bibliography{\myBibs}
+\addcontentsline{toc}{chapter}{Bibliography}
+\cleardoublepage
+
+
+%=====%
+% FIN %
+%=====%
+\end{document}

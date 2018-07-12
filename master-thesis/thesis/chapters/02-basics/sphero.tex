@@ -1,0 +1,29 @@
+\section{Spherical Robot: Orbotix Sphero}
+\todo{write out the list below}
+\begin{itemize}
+	\item{Definition: spherical robot}
+	\item{Sphero: specifics and limitations}
+	\begin{itemize}
+		\item{Movement: differential drive}
+		\item{Sensors: accelerometer}
+		\item{sources of inaccuracy (slip, orientation through odometry)}
+	\end{itemize}
+\end{itemize}
+
+In this work a special kind of mobile robot is used. As stated in the previous chapter \todo{state in the prev. chap.} one of the principles in swarm robotics is to be able to achive a relatively complex task with each individual being as simple as possible. In regards to this principle the kind of robot used in this work is one of the simpelest forms a robot can take: a spherical robot.
+
+A spherical robot is a robot which outer hull is spherical and all the elements are contained within this spherical hull. Thus, collisions can be handeled extremely well and a lot of issues \todo{state some issues} emerging from the direction the robot is currently facing are avoided. Also, for most use-cases the internal workings of the robot can be disregarded/abstracted \todo{wording} to just a sphere rolling in it's environment.
+
+To be able to reproduce and verify the findings in this work, real-world robots were used. The robot best matching the properties stated above \todo{state more (beneficial) properties} was found to be the "Sphero" made by the Company "Obortix" \todo{footnotes \& links}.
+
+\subsection{Orbotix Sphero: Specifics and Limitations}
+
+The Sphero (img. \todo{image}) is based on a spherical acrylic hull which contains the internal sensors and actors. It is originally sold as a toy to be remotely controlled via bluetooth from a smartphone. Based on the communities use-cases and suggestions more and more features regarding remote programming and automated controlling were officially added to the Sphero's capabilities.
+
+\subsubsection{Movement}
+
+The movement is realized with a differiential drive, two wheels running against the acrylic hull from the inside. This special design has implication on the possible movements of the Sphero. In regards of the nautical/Cardan angles \todo{explain \& references} this renders the Sphero impossible to turn in a \emph{roll} axis (bank-axis). Spinning around the \emph{pitch} axis will result in movement and steering the direction of the movement relative to a two-dimensional world-frame is done by controlling the individuals wheels with different speeds and thus spinning around the \emph{yaw} axis (bearing).
+
+\subsubsection{Sensors}
+
+\subsubsection{Inaccuracy}
