@@ -16,18 +16,20 @@ ErrorInformation* ErrorCell::aggregateError(int historyLength){
 		limit = historyLength;
 	}
 	ErrorInformation error = new ErrorInformation();
-	/*
-	error.quality = 0;
-	error.linearError = 0;
-	error.angularError = 0;
-	error.age = 0;
-	*/
+	// quality is closer to 1, the more measurements are takent into account
+	error.quality = 1 - (1/limit);
+	// compute the mean, since we have exact values.
+	// TODO: compute via Kalman Filter for un-precise measurements
+	float linearError = 0;
+	float angularError = 0;
 	for (int i = 0; i < limit; ++i)
 	{
 		errorInsert item = history[i];
-		int itemLinearError = ((error.linearError * (i - 1)) + item.linearError) / i;
-		int itemAngularError = ((error.angularError * (i - 1)) + item.angularError) / i;
+		linearError += item.linearError;
+		angularError += item.angularError;
 	}
+	error.linearError = linearError / limit;
+	error.angularError = angularError / limit;
 	return &error;
 }
 
