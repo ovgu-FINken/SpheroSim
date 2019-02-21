@@ -270,7 +270,10 @@ void GazeboSpheroController::getWheelVelocities()
 {
     boost::mutex::scoped_lock scoped_lock ( lock );
 
+    // TODO: retrieve error from current position
+    // TODO: inject linear error here
     double vr = x_;
+    // TODO: inject angular error here
     double va = rot_;
 
     wheel_speed_[LEFT] = vr; // + va * wheel_separation_ / 2.0;
