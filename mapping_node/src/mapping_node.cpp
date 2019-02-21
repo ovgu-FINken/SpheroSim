@@ -14,9 +14,9 @@ const int MAPSIZE_HORIZONTAL = 100;
 
 std::vector<ErrorCell> map;
 
-///
-/// Callback method to insert a reported error into the shared error map.
-///
+/**
+ * Callback method to insert a reported error into the shared error map.
+ */
 bool insert_error(errorInsert::Request &request, errorInsert::Response &response)
 {
 	int request_x = request.planned_pose.linear.x;
@@ -39,9 +39,9 @@ bool insert_error(errorInsert::Request &request, errorInsert::Response &response
 	return true;
 }
 
-///
-/// Callback method to respond to a request for error information for a given position.
-///
+/**
+ * Callback method to respond to a request for error information for a given position.
+ */
 bool get_point_error (getPositionError::Request &request, getPositionError::Response &response)
 {
 	int request_x = request.point.x;
@@ -56,17 +56,17 @@ bool get_point_error (getPositionError::Request &request, getPositionError::Resp
 	return true;
 }
 
-///
-/// Publisher method for the complete error map.
-///
+/**
+ * Publisher method for the complete error map.
+ */
 void publish_error_map()
 {
 
 }
 
-///
-/// Entry method to start the mapping node.
-///
+/**
+ * Entry method to start the mapping node.
+ */
 int main(int argc, char **argv)
 {
 	// initialize the connection to ROS(-master)
