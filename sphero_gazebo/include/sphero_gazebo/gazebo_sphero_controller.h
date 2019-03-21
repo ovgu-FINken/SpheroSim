@@ -69,6 +69,7 @@ namespace gazebo {
       void publishWheelTF(); /// publishes the wheel tf's
       void publishWheelJointState();
       void UpdateOdometryEncoder();
+      double getErrorFactor(double limit);
 
 
       GazeboRosPtr gazebo_ros_;

@@ -33,7 +33,10 @@ enum {
     LEFT,
 };
 
-GazeboSpheroController::GazeboSpheroController() {}
+GazeboSpheroController::GazeboSpheroController() {
+    // initialize a new random seed
+    srand (time(NULL));
+}
 
 // Destructor
 GazeboSpheroController::~GazeboSpheroController() {}
@@ -65,7 +68,6 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     odomOptions["world"] = WORLD;
     gazebo_ros_->getParameter<OdomSource> ( odom_source_, "odometrySource", odomOptions, WORLD );
 
-
     joints_.resize ( 2 );
     joints_[LEFT] = gazebo_ros_->getJoint ( parent, "leftJoint", "left_joint" );
     joints_[RIGHT] = gazebo_ros_->getJoint ( parent, "rightJoint", "right_joint" );
@@ -94,7 +96,6 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     rot_ = 0;
     alive_ = true;
 
-
     if (this->publishWheelJointState_)
     {
         joint_state_publisher_ = gazebo_ros_->node()->advertise<sensor_msgs::JointState>("joint_states", 1000);
@@ -122,7 +123,6 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
       position_publisher_ = gazebo_ros_->node()->advertise<geometry_msgs::Pose2D>(position_topic_, 1);
       ROS_INFO("%s: Advertise position on %s !", gazebo_ros_->info(), position_topic_.c_str());
     }
-
 
     // start custom queue for diff drive
     this->callback_queue_thread_ =
@@ -207,11 +207,9 @@ void GazeboSpheroController::UpdateChild()
       }
     }
 
-
     if ( odom_source_ == ENCODER ) UpdateOdometryEncoder();
     common::Time current_time = parent->GetWorld()->GetSimTime();
     double seconds_since_last_update = ( current_time - last_update_time_ ).Double();
-
     if ( seconds_since_last_update > update_period_ ) {
         if (this->publish_tf_){
             publishOdometry ( seconds_since_last_update );
@@ -219,12 +217,9 @@ void GazeboSpheroController::UpdateChild()
         }
         if ( publishWheelTF_ ) publishWheelTF();
         if ( publishWheelJointState_ ) publishWheelJointState();
-
         // Update robot in case new velocities have been requested
         getWheelVelocities();
-
         double current_speed[2];
-
         current_speed[LEFT] = joints_[LEFT]->GetVelocity ( 0 )   * ( wheel_diameter_ / 2.0 );
         current_speed[RIGHT] = joints_[RIGHT]->GetVelocity ( 0 ) * ( wheel_diameter_ / 2.0 );
 
@@ -239,14 +234,10 @@ void GazeboSpheroController::UpdateChild()
                 wheel_speed_instr_[LEFT]+=fmin ( wheel_speed_[LEFT]-current_speed[LEFT],  wheel_accel * seconds_since_last_update );
             else
                 wheel_speed_instr_[LEFT]+=fmax ( wheel_speed_[LEFT]-current_speed[LEFT], -wheel_accel * seconds_since_last_update );
-
             if ( wheel_speed_[RIGHT]>current_speed[RIGHT] )
                 wheel_speed_instr_[RIGHT]+=fmin ( wheel_speed_[RIGHT]-current_speed[RIGHT], wheel_accel * seconds_since_last_update );
             else
                 wheel_speed_instr_[RIGHT]+=fmax ( wheel_speed_[RIGHT]-current_speed[RIGHT], -wheel_accel * seconds_since_last_update );
-
-            // ROS_INFO("actual wheel speed = %lf, issued wheel speed= %lf", current_speed[LEFT], wheel_speed_[LEFT]);
-            // ROS_INFO("actual wheel speed = %lf, issued wheel speed= %lf", current_speed[RIGHT],wheel_speed_[RIGHT]);
 
             joints_[LEFT]->SetParam ( "vel", 0,wheel_speed_instr_[LEFT] / ( wheel_diameter_ / 2.0 ) );
             joints_[RIGHT]->SetParam ( "vel", 0,wheel_speed_instr_[RIGHT] / ( wheel_diameter_ / 2.0 ) );
@@ -266,17 +257,26 @@ void GazeboSpheroController::FiniChild()
     callback_queue_thread_.join();
 }
 
+// calculates the factor to apply to a movement command to inject a random error
+double GazeboSpheroController::getErrorFactor(double limit)
+{
+    double error = ((double)(rand() / RAND_MAX) * limit * 2) - limit;
+    return 1 + error;   
+}
+
 void GazeboSpheroController::getWheelVelocities()
 {
     boost::mutex::scoped_lock scoped_lock ( lock );
-
     // TODO: retrieve error from current position
-    // TODO: inject linear error here
-    double vr = x_;
-    // TODO: inject angular error here
-    double va = rot_;
-
-    wheel_speed_[LEFT] = vr; // + va * wheel_separation_ / 2.0;
+    // inject a random error into the next movement instruction
+    double linearLimit = 0.05;
+    double angularLimit = 0.02;
+    double linearFactor = getErrorFactor(linearLimit);
+    double angularFactor = getErrorFactor(angularLimit);
+    double vr = x_ * linearFactor;
+    double va = rot_ * angularFactor;
+    // hand the movement command over to gazebo
+    wheel_speed_[LEFT] = vr;
     wheel_speed_[RIGHT] = va * wheel_separation_ / 2.0;
 }
 

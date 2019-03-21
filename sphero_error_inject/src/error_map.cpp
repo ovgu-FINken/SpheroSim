@@ -8,13 +8,13 @@ namespace speheroSim {
 
 	ErrorMap::ErrorMap(string csvPath, boolean header) {
 		// TODO: read the given csv-file
-		string** lines = string[][]
+		string* lines = string[];
 		// TODO: omit the header, if present
 		map = ErrorInformation[];
 		// TODO: initialize the error map from csv lines
 	}
 
 	ErrorInformation ErrorMap::GetPositionError(geometryMsg::Pose2D pose) {
-		
+		// TODO: lookup in the map (transform position to array index)
 	}
 }
