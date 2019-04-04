@@ -77,8 +77,7 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
 
     this->publish_tf_ = true;
     if (!_sdf->HasElement("publishTf")) {
-      ROS_WARN("GazeboSpheroController Plugin (ns = %s) missing <publishTf>, defaults to %d",
-          this->robot_namespace_.c_str(), this->publish_tf_);
+      ROS_WARN("GazeboSpheroController Plugin (ns = %s) missing <publishTf>, defaults to %d", this->robot_namespace_.c_str(), this->publish_tf_);
     } else {
       this->publish_tf_ = _sdf->GetElement("publishTf")->Get<bool>();
     }
@@ -107,8 +106,7 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     // ROS: Subscribe to the velocity command topic (usually "cmd_vel")
     ROS_INFO("%s: Try to subscribe to %s!", gazebo_ros_->info(), command_topic_.c_str());
 
-    ros::SubscribeOptions so =
-        ros::SubscribeOptions::create<geometry_msgs::Twist>(command_topic_, 1,
+    ros::SubscribeOptions so = ros::SubscribeOptions::create<geometry_msgs::Twist>(command_topic_, 1,
                 boost::bind(&GazeboSpheroController::cmdVelCallback, this, _1),
                 ros::VoidPtr(), &queue_);
 
@@ -125,12 +123,10 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     }
 
     // start custom queue for diff drive
-    this->callback_queue_thread_ =
-        boost::thread ( boost::bind ( &GazeboSpheroController::QueueThread, this ) );
+    this->callback_queue_thread_ = boost::thread ( boost::bind ( &GazeboSpheroController::QueueThread, this ) );
 
     // listen to the update event (broadcast every simulation iteration)
-    this->update_connection_ =
-        event::Events::ConnectWorldUpdateBegin ( boost::bind ( &GazeboSpheroController::UpdateChild, this ) );
+    this->update_connection_ = event::Events::ConnectWorldUpdateBegin ( boost::bind ( &GazeboSpheroController::UpdateChild, this ) );
 }
 
 void GazeboSpheroController::Reset()
@@ -267,7 +263,7 @@ double GazeboSpheroController::getErrorFactor(double limit)
 void GazeboSpheroController::getWheelVelocities()
 {
     boost::mutex::scoped_lock scoped_lock ( lock );
-    // TODO: retrieve error from current position
+    // TODO: retrieve error from current position --> errorMap-Service
     // inject a random error into the next movement instruction
     double linearLimit = 0.05;
     double angularLimit = 0.02;

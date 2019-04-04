@@ -5,9 +5,9 @@ namespace spheroSim {
 	/**
 	 * POCO for definition of the error a cell on the map has.
 	 */
-	class error {
+	class Error {
 		public:
-			error();
+			Error();
 		private:
 			float linearError;
 			float angularError;
