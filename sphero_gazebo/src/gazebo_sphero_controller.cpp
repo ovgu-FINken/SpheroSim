@@ -33,10 +33,7 @@ enum {
     LEFT,
 };
 
-GazeboSpheroController::GazeboSpheroController() {
-    // initialize a new random seed
-    srand (time(NULL));
-}
+GazeboSpheroController::GazeboSpheroController() {}
 
 // Destructor
 GazeboSpheroController::~GazeboSpheroController() {}
@@ -256,8 +253,11 @@ void GazeboSpheroController::FiniChild()
 // calculates the factor to apply to a movement command to inject a random error
 double GazeboSpheroController::getErrorFactor(double limit)
 {
-    double error = ((double)(rand() / RAND_MAX) * limit * 2) - limit;
-    return 1 + error;   
+    double lower_bound = limit * -1;
+    std::uniform_real_distribution<double> unif(lower_bound,limit);
+    std::default_random_engine re;
+    double random = unif(re);
+    return 1 + random;   
 }
 
 void GazeboSpheroController::getWheelVelocities()
@@ -265,8 +265,8 @@ void GazeboSpheroController::getWheelVelocities()
     boost::mutex::scoped_lock scoped_lock ( lock );
     // TODO: retrieve error from current position --> errorMap-Service
     // inject a random error into the next movement instruction
-    double linearLimit = 0.05;
-    double angularLimit = 0.02;
+    double linearLimit = 0.9;
+    double angularLimit = 0.9;
     double linearFactor = getErrorFactor(linearLimit);
     double angularFactor = getErrorFactor(angularLimit);
     double vr = x_ * linearFactor;

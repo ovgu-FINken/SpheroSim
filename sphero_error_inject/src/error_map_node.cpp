@@ -1,8 +1,7 @@
 #include <sphero_error_inject/error_map.h>
 
 bool getPositionError(sphero_error_inject::Error::Request &req, sphero_error_inject::Error::Response &res) {
-	ErrorMap map = ErrorMap::getInstance();
-	Error error = map.GetPositionError(req.pose);
+	Error error = ErrorMap::getInstance().GetPositionError(req.pose);
 	res.linearError = error.linearError;
 	res.angularError = error.angularError;
 	return true;
