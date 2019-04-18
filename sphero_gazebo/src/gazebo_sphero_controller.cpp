@@ -257,7 +257,7 @@ double GazeboSpheroController::getErrorFactor(double limit)
     std::uniform_real_distribution<double> unif(lower_bound,limit);
     std::default_random_engine re;
     double random = unif(re);
-    return 1 + random;   
+    return 1 + random;
 }
 
 void GazeboSpheroController::getWheelVelocities()
