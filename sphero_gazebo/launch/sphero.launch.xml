@@ -15,6 +15,11 @@
     <param name="publish_frequency" value="10.0"/>
   </node>
 
+  <!-- random movement command issuer -->
+  <node name="random_commander" pkg="randomwalk_commander" respawn="false" type="randomwalk_commander_node">
+    <param name="index" value="$(arg index)" />
+  </node>
+
   <!-- ROS navigation planners are parameterized to allow for external configuration -->
   <arg name="base_global_planner" default="navfn/NavfnROS"/>
   <arg name="base_local_planner" default="base_local_planner/TrajectoryPlannerROS"/>

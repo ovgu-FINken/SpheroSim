@@ -39,38 +39,37 @@ GazeboSpheroController::GazeboSpheroController() {}
 GazeboSpheroController::~GazeboSpheroController() {}
 
 // Load the controller
-void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _sdf )
+void GazeboSpheroController::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
 {
 
     this->parent = _parent;
-    gazebo_ros_ = GazeboRosPtr ( new GazeboRos ( _parent, _sdf, "DiffDrive" ) );
+    gazebo_ros_ = GazeboRosPtr(new GazeboRos(_parent, _sdf, "DiffDrive"));
     // Make sure the ROS node for Gazebo has already been initialized
     gazebo_ros_->isInitialized();
 
-    gazebo_ros_->getParameter<std::string> ( command_topic_, "commandTopic", "sphero/cmd_vel" );
-    gazebo_ros_->getParameter<std::string> ( odometry_topic_, "odometryTopic", "odom" );
-    gazebo_ros_->getParameter<std::string> ( position_topic_, "positionTopic", "pos" );
-    gazebo_ros_->getParameter<std::string> ( odometry_frame_, "odometryFrame", "/odom_frame" );
-    gazebo_ros_->getParameter<std::string> ( robot_base_frame_, "robotBaseFrame", "base_footprint" );
-    gazebo_ros_->getParameterBoolean ( publishWheelTF_, "publishWheelTF", false );
-    gazebo_ros_->getParameterBoolean ( publishWheelJointState_, "publishWheelJointState", false );
+    gazebo_ros_->getParameter<std::string>(command_topic_, "commandTopic", "sphero/cmd_vel");
+    gazebo_ros_->getParameter<std::string>(odometry_topic_, "odometryTopic", "odom");
+    gazebo_ros_->getParameter<std::string>(position_topic_, "positionTopic", "pos");
+    gazebo_ros_->getParameter<std::string>(odometry_frame_, "odometryFrame", "/odom_frame");
+    gazebo_ros_->getParameter<std::string>(robot_base_frame_, "robotBaseFrame", "base_footprint");
+    gazebo_ros_->getParameterBoolean(publishWheelTF_, "publishWheelTF", false);
+    gazebo_ros_->getParameterBoolean(publishWheelJointState_, "publishWheelJointState", false);
 
-    gazebo_ros_->getParameter<double> ( wheel_separation_, "wheelSeparation", 0.34 );
-    gazebo_ros_->getParameter<double> ( wheel_diameter_, "wheelDiameter", 0.1 );
-    gazebo_ros_->getParameter<double> ( wheel_accel, "wheelAcceleration", 0.0 );
-    gazebo_ros_->getParameter<double> ( wheel_torque, "wheelTorque", 0.02 );
-    gazebo_ros_->getParameter<double> ( update_rate_, "updateRate", 100.0 );
+    gazebo_ros_->getParameter<double>(wheel_separation_, "wheelSeparation", 0.34);
+    gazebo_ros_->getParameter<double>(wheel_diameter_, "wheelDiameter", 0.1);
+    gazebo_ros_->getParameter<double>(wheel_accel, "wheelAcceleration", 0.0);
+    gazebo_ros_->getParameter<double>(wheel_torque, "wheelTorque", 0.02);
+    gazebo_ros_->getParameter<double>(update_rate_, "updateRate", 100.0);
     std::map<std::string, OdomSource> odomOptions;
     odomOptions["encoder"] = ENCODER;
     odomOptions["world"] = WORLD;
-    gazebo_ros_->getParameter<OdomSource> ( odom_source_, "odometrySource", odomOptions, WORLD );
+    gazebo_ros_->getParameter<OdomSource>(odom_source_, "odometrySource", odomOptions, WORLD);
 
     joints_.resize ( 2 );
-    joints_[LEFT] = gazebo_ros_->getJoint ( parent, "leftJoint", "left_joint" );
-    joints_[RIGHT] = gazebo_ros_->getJoint ( parent, "rightJoint", "right_joint" );
-    joints_[LEFT]->SetParam ( "fmax", 0, wheel_torque );
-    joints_[RIGHT]->SetParam ( "fmax", 0, wheel_torque );
-
+    joints_[LEFT] = gazebo_ros_->getJoint(parent, "leftJoint", "left_joint");
+    joints_[RIGHT] = gazebo_ros_->getJoint(parent, "rightJoint", "right_joint");
+    joints_[LEFT]->SetParam("fmax", 0, wheel_torque);
+    joints_[RIGHT]->SetParam("fmax", 0, wheel_torque);
 
     this->publish_tf_ = true;
     if (!_sdf->HasElement("publishTf")) {
@@ -120,7 +119,7 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     }
 
     // start custom queue for diff drive
-    this->callback_queue_thread_ = boost::thread ( boost::bind ( &GazeboSpheroController::QueueThread, this ) );
+    this->callback_queue_thread_ = boost::thread(boost::bind(&GazeboSpheroController::QueueThread, this));
 
     // listen to the update event (broadcast every simulation iteration)
     this->update_connection_ = event::Events::ConnectWorldUpdateBegin ( boost::bind ( &GazeboSpheroController::UpdateChild, this ) );
@@ -150,9 +149,9 @@ void GazeboSpheroController::publishWheelJointState()
         physics::JointPtr joint = joints_[i];
         math::Angle angle = joint->GetAngle ( 0 );
         joint_state_.name[i] = joint->GetName();
-        joint_state_.position[i] = angle.Radian () ;
+        joint_state_.position[i] = angle.Radian() ;
     }
-    joint_state_publisher_.publish ( joint_state_ );
+    joint_state_publisher_.publish(joint_state_);
 }
 
 void GazeboSpheroController::publishWheelTF()
@@ -194,34 +193,38 @@ void GazeboSpheroController::UpdateChild()
         ==> scaling factor is 1/1.275
     */
 
-    for ( int i = 0; i < 2; i++ ) {
-      if ( fabs(wheel_torque -joints_[i]->GetParam ( "fmax", 0 )) > 1e-6 ) {
-        joints_[i]->SetParam ( "fmax", 0, wheel_torque );
+    for (int i = 0; i < 2; i++) {
+      if (fabs(wheel_torque - joints_[i]->GetParam("fmax", 0)) > 1e-6) {
+        joints_[i]->SetParam("fmax", 0, wheel_torque);
       }
     }
 
-    if ( odom_source_ == ENCODER ) UpdateOdometryEncoder();
+    if (odom_source_ == ENCODER) {
+        UpdateOdometryEncoder();
+    }
     common::Time current_time = parent->GetWorld()->GetSimTime();
-    double seconds_since_last_update = ( current_time - last_update_time_ ).Double();
-    if ( seconds_since_last_update > update_period_ ) {
-        if (this->publish_tf_){
-            publishOdometry ( seconds_since_last_update );
-            publishPosition ( seconds_since_last_update );
+    double seconds_since_last_update = (current_time - last_update_time_).Double();
+    if (seconds_since_last_update > update_period_) {
+        if (this->publish_tf_) {
+            publishOdometry(seconds_since_last_update);
+            publishPosition();
         }
-        if ( publishWheelTF_ ) publishWheelTF();
-        if ( publishWheelJointState_ ) publishWheelJointState();
+        if (publishWheelTF_) {
+            publishWheelTF();
+        }
+        if (publishWheelJointState_) {
+            publishWheelJointState();
+        }
         // Update robot in case new velocities have been requested
         getWheelVelocities();
         double current_speed[2];
-        current_speed[LEFT] = joints_[LEFT]->GetVelocity ( 0 )   * ( wheel_diameter_ / 2.0 );
-        current_speed[RIGHT] = joints_[RIGHT]->GetVelocity ( 0 ) * ( wheel_diameter_ / 2.0 );
+        current_speed[LEFT] = joints_[LEFT]->GetVelocity(0) * (wheel_diameter_ / 2.0);
+        current_speed[RIGHT] = joints_[RIGHT]->GetVelocity(0) * (wheel_diameter_ / 2.0);
 
-        if ( wheel_accel == 0 ||
-                ( fabs ( wheel_speed_[LEFT] - current_speed[LEFT] ) < 0.01 ) ||
-                ( fabs ( wheel_speed_[RIGHT] - current_speed[RIGHT] ) < 0.01 ) ) {
+        if (wheel_accel == 0 || (fabs(wheel_speed_[LEFT] - current_speed[LEFT]) < 0.01) || (fabs(wheel_speed_[RIGHT] - current_speed[RIGHT]) < 0.01)) {
             //if max_accel == 0, or target speed is reached
-            joints_[LEFT]->SetParam ( "vel", 0, wheel_speed_[LEFT]/ ( wheel_diameter_ / 2.0 ) );
-            joints_[RIGHT]->SetParam ( "vel", 0, wheel_speed_[RIGHT]/ ( wheel_diameter_ / 2.0 ) );
+            joints_[LEFT]->SetParam("vel", 0, wheel_speed_[LEFT] / (wheel_diameter_ / 2.0));
+            joints_[RIGHT]->SetParam("vel", 0, wheel_speed_[RIGHT] / (wheel_diameter_ / 2.0));
         } else {
             if ( wheel_speed_[LEFT]>=current_speed[LEFT] )
                 wheel_speed_instr_[LEFT]+=fmin ( wheel_speed_[LEFT]-current_speed[LEFT],  wheel_accel * seconds_since_last_update );
@@ -232,11 +235,11 @@ void GazeboSpheroController::UpdateChild()
             else
                 wheel_speed_instr_[RIGHT]+=fmax ( wheel_speed_[RIGHT]-current_speed[RIGHT], -wheel_accel * seconds_since_last_update );
 
-            joints_[LEFT]->SetParam ( "vel", 0,wheel_speed_instr_[LEFT] / ( wheel_diameter_ / 2.0 ) );
-            joints_[RIGHT]->SetParam ( "vel", 0,wheel_speed_instr_[RIGHT] / ( wheel_diameter_ / 2.0 ) );
+            joints_[LEFT]->SetParam("vel", 0,wheel_speed_instr_[LEFT] / (wheel_diameter_ / 2.0));
+            joints_[RIGHT]->SetParam("vel", 0,wheel_speed_instr_[RIGHT] / (wheel_diameter_ / 2.0));
         }
 
-        last_update_time_+= common::Time ( update_period_ );
+        last_update_time_+= common::Time(update_period_);
     }
 }
 
@@ -278,7 +281,7 @@ void GazeboSpheroController::getWheelVelocities()
 
 void GazeboSpheroController::cmdVelCallback ( const geometry_msgs::Twist::ConstPtr& cmd_msg )
 {
-    boost::mutex::scoped_lock scoped_lock ( lock );
+    boost::mutex::scoped_lock scoped_lock(lock);
     ROS_INFO("%s: cmd_vel - linar.x: %g  \t| angular.z: %g", gazebo_ros_->info(), cmd_msg->linear.x, cmd_msg->angular.z);
     x_ = cmd_msg->linear.x;
     rot_ = cmd_msg->angular.z;
@@ -295,38 +298,37 @@ void GazeboSpheroController::QueueThread()
 
 void GazeboSpheroController::UpdateOdometryEncoder()
 {
-    double vl = joints_[LEFT]->GetVelocity ( 0 );
-    double vr = joints_[RIGHT]->GetVelocity ( 0 );
+    double vl = joints_[LEFT]->GetVelocity(0);
+    double vr = joints_[RIGHT]->GetVelocity(0);
     common::Time current_time = parent->GetWorld()->GetSimTime();
-    double seconds_since_last_update = ( current_time - last_odom_update_ ).Double();
+    double seconds_since_last_update = (current_time - last_odom_update_).Double();
     last_odom_update_ = current_time;
 
     double b = wheel_separation_;
 
     // Book: Sigwart 2011 Autonompus Mobile Robots page:337
-    double sl = vl * ( wheel_diameter_ / 2.0 ) * seconds_since_last_update;
-    double sr = vr * ( wheel_diameter_ / 2.0 ) * seconds_since_last_update;
-    double theta = ( sl - sr ) /b;
+    double sl = vl * (wheel_diameter_ / 2.0) * seconds_since_last_update;
+    double sr = vr * (wheel_diameter_ / 2.0) * seconds_since_last_update;
+    double theta = (sl - sr) / b;
 
-
-    double dx = ( sl + sr ) /2.0 * cos ( pose_encoder_.theta + ( sl - sr ) / ( 2.0*b ) );
-    double dy = ( sl + sr ) /2.0 * sin ( pose_encoder_.theta + ( sl - sr ) / ( 2.0*b ) );
-    double dtheta = ( sl - sr ) /b;
+    double dx = (sl + sr) /2.0 * cos(pose_encoder_.theta + (sl - sr) / (2.0*b));
+    double dy = (sl + sr) /2.0 * sin(pose_encoder_.theta + (sl - sr) / (2.0*b));
+    double dtheta = (sl - sr) / b;
 
     pose_encoder_.x += dx;
     pose_encoder_.y += dy;
     pose_encoder_.theta += dtheta;
 
     double w = dtheta/seconds_since_last_update;
-    double v = sqrt ( dx*dx+dy*dy ) /seconds_since_last_update;
+    double v = sqrt(dx * dx + dy * dy) / seconds_since_last_update;
 
     tf::Quaternion qt;
     tf::Vector3 vt;
-    qt.setRPY ( 0,0,pose_encoder_.theta );
-    vt = tf::Vector3 ( pose_encoder_.x, pose_encoder_.y, 0 );
+    qt.setRPY(0, 0, pose_encoder_.theta);
+    vt = tf::Vector3(pose_encoder_.x, pose_encoder_.y, 0);
 
     odom_.pose.pose.position.x = vt.x();
-    odom_.pose.pose.position.y = vt.y();
+    odom_.pose.pose.position.y = vt.y()
     odom_.pose.pose.position.z = vt.z();
 
     odom_.pose.pose.orientation.x = qt.x();
@@ -335,56 +337,43 @@ void GazeboSpheroController::UpdateOdometryEncoder()
     odom_.pose.pose.orientation.w = qt.w();
 
     odom_.twist.twist.angular.z = w;
-    odom_.twist.twist.linear.x = dx/seconds_since_last_update;
-    odom_.twist.twist.linear.y = dy/seconds_since_last_update;
+    odom_.twist.twist.linear.x = dx / seconds_since_last_update;
+    odom_.twist.twist.linear.y = dy / seconds_since_last_update;
 }
 
-void GazeboSpheroController::publishPosition ( double step_time )
+void GazeboSpheroController::publishPosition()
 {
     math::Pose world_pose = parent->GetWorldPose();
     pose_.x = world_pose.pos.x;
     pose_.y = world_pose.pos.y;
     // get the orientation from the simulation
     double theta = world_pose.rot.GetYaw();
-    // convert to radians
-    /*
-    theta = theta * 180;
-    double fullTurn = 3.14159265358979323846 * 2;
-    // wrap for multiple turns
-    if(theta > fullTurn){
-        theta -= fullTurn;
-    }
-    if(theta < -fullTurn){
-        theta += fullTurn;
-    }
-    */
     pose_.theta = theta * 180;
-    position_publisher_.publish ( pose_ );
-
-    // ROS_INFO("%s: pose - x: %g | y: %g | theta: %g", gazebo_ros_->info(), pose_.x, pose_.y, pose_.theta);
+    // get the position from the odometry to include the movement error
+    //pose_ = odom_.pose.pose;
+    position_publisher_.publish(pose_);
 }
 
-void GazeboSpheroController::publishOdometry ( double step_time )
+void GazeboSpheroController::publishOdometry(double step_time)
 {
 
     ros::Time current_time = ros::Time::now();
-    std::string odom_frame = gazebo_ros_->resolveTF ( odometry_frame_ );
-    std::string base_footprint_frame = gazebo_ros_->resolveTF ( robot_base_frame_ );
+    std::string odom_frame = gazebo_ros_->resolveTF(odometry_frame_);
+    std::string base_footprint_frame = gazebo_ros_->resolveTF(robot_base_frame_);
 
     tf::Quaternion qt;
     tf::Vector3 vt;
 
-    if ( odom_source_ == ENCODER ) {
+    if (odom_source_ == ENCODER) {
         // getting data form encoder integration
-        qt = tf::Quaternion ( odom_.pose.pose.orientation.x, odom_.pose.pose.orientation.y, odom_.pose.pose.orientation.z, odom_.pose.pose.orientation.w );
-        vt = tf::Vector3 ( odom_.pose.pose.position.x, odom_.pose.pose.position.y, odom_.pose.pose.position.z );
-
+        qt = tf::Quaternion(odom_.pose.pose.orientation.x, odom_.pose.pose.orientation.y, odom_.pose.pose.orientation.z, odom_.pose.pose.orientation.w);
+        vt = tf::Vector3(odom_.pose.pose.position.x, odom_.pose.pose.position.y, odom_.pose.pose.position.z);
     }
-    if ( odom_source_ == WORLD ) {
+    if (odom_source_ == WORLD) {
         // getting data form gazebo world
         math::Pose pose = parent->GetWorldPose();
-        qt = tf::Quaternion ( 0, 0, 0, 1 );
-        vt = tf::Vector3 ( pose.pos.x, pose.pos.y, pose.pos.z );
+        qt = tf::Quaternion(0, 0, 0, 1);
+        vt = tf::Vector3(pose.pos.x, pose.pos.y, pose.pos.z);
 
         odom_.pose.pose.position.x = vt.x();
         odom_.pose.pose.position.y = vt.y();
@@ -402,15 +391,12 @@ void GazeboSpheroController::publishOdometry ( double step_time )
 
         // convert velocity to child_frame_id (aka base_footprint)
         float yaw = pose.rot.GetYaw();
-        odom_.twist.twist.linear.x = cosf ( yaw ) * linear.x + sinf ( yaw ) * linear.y;
-        odom_.twist.twist.linear.y = cosf ( yaw ) * linear.y - sinf ( yaw ) * linear.x;
+        odom_.twist.twist.linear.x = cosf(yaw) * linear.x + sinf(yaw) * linear.y;
+        odom_.twist.twist.linear.y = cosf(yaw) * linear.y - sinf(yaw) * linear.x;
     }
 
-    tf::Transform base_footprint_to_odom ( qt, vt );
-    transform_broadcaster_->sendTransform (
-        tf::StampedTransform ( base_footprint_to_odom, current_time,
-                               odom_frame, base_footprint_frame ) );
-
+    tf::Transform base_footprint_to_odom(qt, vt);
+    transform_broadcaster_->sendTransform(tf::StampedTransform(base_footprint_to_odom, current_time, odom_frame, base_footprint_frame));
 
     // set covariance
     odom_.pose.covariance[0] = 0.00001;
@@ -420,15 +406,14 @@ void GazeboSpheroController::publishOdometry ( double step_time )
     odom_.pose.covariance[28] = 1000000000000.0;
     odom_.pose.covariance[35] = 0.001;
 
-
     // set header
     odom_.header.stamp = current_time;
     odom_.header.frame_id = odom_frame;
     odom_.child_frame_id = base_footprint_frame;
 
-    odometry_publisher_.publish ( odom_ );
+    odometry_publisher_.publish(odom_);
 }
 
-GZ_REGISTER_MODEL_PLUGIN ( GazeboSpheroController )
+GZ_REGISTER_MODEL_PLUGIN(GazeboSpheroController)
 }
 

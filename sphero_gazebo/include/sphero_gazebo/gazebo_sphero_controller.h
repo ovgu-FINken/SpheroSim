@@ -83,6 +83,9 @@ namespace gazebo {
       double wheel_accel;
       double wheel_speed_instr_[2];
 
+      double current_linear_error_;
+      double current_angular_error_;
+
       std::vector<physics::JointPtr> joints_;
 
       // ROS STUFF
