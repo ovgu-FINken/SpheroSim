@@ -23,6 +23,9 @@
 #include <gazebo/physics/physics.hh>
 #include <gazebo_plugins/gazebo_ros_utils.h>
 
+//Eigen
+#include <sphero_gazebo/Eigen/Dense>
+
 // ROS
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>

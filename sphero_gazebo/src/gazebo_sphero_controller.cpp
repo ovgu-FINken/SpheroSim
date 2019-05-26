@@ -207,18 +207,23 @@ void GazeboSpheroController::UpdateChild()
       }
     }
 
-
-    if ( odom_source_ == ENCODER ) UpdateOdometryEncoder();
+    if (odom_source_ == ENCODER) {
+        UpdateOdometryEncoder();
+    }
     common::Time current_time = parent->GetWorld()->GetSimTime();
     double seconds_since_last_update = ( current_time - last_update_time_ ).Double();
 
-    if ( seconds_since_last_update > update_period_ ) {
+    if (seconds_since_last_update > update_period_) {
         if (this->publish_tf_){
-            publishOdometry ( seconds_since_last_update );
-            publishPosition ( seconds_since_last_update );
+            publishOdometry(seconds_since_last_update);
+            publishPosition(seconds_since_last_update);
         }
-        if ( publishWheelTF_ ) publishWheelTF();
-        if ( publishWheelJointState_ ) publishWheelJointState();
+        if (publishWheelTF_) {
+            publishWheelTF();
+        }
+        if (publishWheelJointState_) {
+            publishWheelJointState();
+        }
 
         // Update robot in case new velocities have been requested
         getWheelVelocities();
@@ -294,37 +299,42 @@ void GazeboSpheroController::QueueThread()
     }
 }
 
+
+/**
+ * Calculates the odometry for the current step based on the current movement and the last known position.
+ * http://www.cs.columbia.edu/~allen/F15/NOTES/icckinematics.pdf
+ */
 void GazeboSpheroController::UpdateOdometryEncoder()
 {
-    double vl = joints_[LEFT]->GetVelocity ( 0 );
-    double vr = joints_[RIGHT]->GetVelocity ( 0 );
     common::Time current_time = parent->GetWorld()->GetSimTime();
-    double seconds_since_last_update = ( current_time - last_odom_update_ ).Double();
+    double seconds_since_last_update = (current_time - last_odom_update_).Double();
     last_odom_update_ = current_time;
 
-    double b = wheel_separation_;
+    double currentOrientation = pose_.theta;
+    // rot_ specifies how long it will take for a full circle (angular velocity in rad/s)
+    // x_ specifies how fast the robot travels trough the circle (linear velocity in m/s)
+    // x_ / rot_ specifies the radius of the circle
+    double fullTurn = 3.14159265358979323846 * 2;
+    // specifies how long a full circle will take
+    double fullTurnTime = fullTurn / rot_;
+    double circumference = fullTurnTime * x;
+    double radius = circumference / fullTurn; // = x_ / rot_;
+    double angle = rot_ * seconds_since_last_update;
+    // instantanious center of curvature - the point the current curve revolves around
+    double iccX = pose_.x - (radius * sin(currentOrientation))
+    double iccY = pose_.y + (radius * cos(currentOrientation))
+    Eigen::Matrix3d rotateArountIcc;
+    rotateArountIcc <<  cos(angle), -1 * sin(angle), 0,
+                        sin(angle), cos(angle), 0,
+                        0, 0, 1;
+    Eigen::Vector3d translateIccToOrigin(pose_.x - iccX, pose_.y - iccY, currentOrientation);
+    Eigen::Vector3d translateIccBack(iccX, iccY, angle);
+    Eigen::Vector3d odomTarget = (rotateArountIcc * translateIccToOrigin) * translateIccBack;
 
-    // Book: Sigwart 2011 Autonompus Mobile Robots page:337
-    double sl = vl * ( wheel_diameter_ / 2.0 ) * seconds_since_last_update;
-    double sr = vr * ( wheel_diameter_ / 2.0 ) * seconds_since_last_update;
-    double theta = ( sl - sr ) /b;
-
-
-    double dx = ( sl + sr ) /2.0 * cos ( pose_encoder_.theta + ( sl - sr ) / ( 2.0*b ) );
-    double dy = ( sl + sr ) /2.0 * sin ( pose_encoder_.theta + ( sl - sr ) / ( 2.0*b ) );
-    double dtheta = ( sl - sr ) /b;
-
-    pose_encoder_.x += dx;
-    pose_encoder_.y += dy;
-    pose_encoder_.theta += dtheta;
-
-    double w = dtheta/seconds_since_last_update;
-    double v = sqrt ( dx*dx+dy*dy ) /seconds_since_last_update;
-
-    tf::Quaternion qt;
     tf::Vector3 vt;
-    qt.setRPY ( 0,0,pose_encoder_.theta );
-    vt = tf::Vector3 ( pose_encoder_.x, pose_encoder_.y, 0 );
+    vt = tf::Vector3(odomTarget[0], odomTarget[1], 0 );
+    tf::Quaternion qt;
+    qt.setRPY(0, 0, odomTarget[2]);
 
     odom_.pose.pose.position.x = vt.x();
     odom_.pose.pose.position.y = vt.y();
@@ -334,40 +344,22 @@ void GazeboSpheroController::UpdateOdometryEncoder()
     odom_.pose.pose.orientation.y = qt.y();
     odom_.pose.pose.orientation.z = qt.z();
     odom_.pose.pose.orientation.w = qt.w();
-
-    odom_.twist.twist.angular.z = w;
-    odom_.twist.twist.linear.x = dx/seconds_since_last_update;
-    odom_.twist.twist.linear.y = dy/seconds_since_last_update;
 }
 
 void GazeboSpheroController::publishPosition ( double step_time )
 {
+    // get the position from the simulation
     math::Pose world_pose = parent->GetWorldPose();
     pose_.x = world_pose.pos.x;
     pose_.y = world_pose.pos.y;
     // get the orientation from the simulation
     double theta = world_pose.rot.GetYaw();
-    // convert to radians
-    /*
-    theta = theta * 180;
-    double fullTurn = 3.14159265358979323846 * 2;
-    // wrap for multiple turns
-    if(theta > fullTurn){
-        theta -= fullTurn;
-    }
-    if(theta < -fullTurn){
-        theta += fullTurn;
-    }
-    */
     pose_.theta = theta * 180;
-    position_publisher_.publish ( pose_ );
-
-    // ROS_INFO("%s: pose - x: %g | y: %g | theta: %g", gazebo_ros_->info(), pose_.x, pose_.y, pose_.theta);
+    position_publisher_.publish(pose_);
 }
 
 void GazeboSpheroController::publishOdometry ( double step_time )
-{
-
+{    
     ros::Time current_time = ros::Time::now();
     std::string odom_frame = gazebo_ros_->resolveTF ( odometry_frame_ );
     std::string base_footprint_frame = gazebo_ros_->resolveTF ( robot_base_frame_ );
@@ -382,8 +374,8 @@ void GazeboSpheroController::publishOdometry ( double step_time )
 
     }
     if ( odom_source_ == WORLD ) {
-        // getting data form gazebo world
         math::Pose pose = parent->GetWorldPose();
+
         qt = tf::Quaternion ( 0, 0, 0, 1 );
         vt = tf::Vector3 ( pose.pos.x, pose.pos.y, pose.pos.z );
 
@@ -395,23 +387,19 @@ void GazeboSpheroController::publishOdometry ( double step_time )
         odom_.pose.pose.orientation.y = qt.y();
         odom_.pose.pose.orientation.z = qt.z();
         odom_.pose.pose.orientation.w = qt.w();
-
-        // get velocity in /odom frame
-        math::Vector3 linear;
-        linear = parent->GetWorldLinearVel();
-        odom_.twist.twist.angular.z = parent->GetWorldAngularVel().z;
-
-        // convert velocity to child_frame_id (aka base_footprint)
-        float yaw = pose.rot.GetYaw();
-        odom_.twist.twist.linear.x = cosf ( yaw ) * linear.x + sinf ( yaw ) * linear.y;
-        odom_.twist.twist.linear.y = cosf ( yaw ) * linear.y - sinf ( yaw ) * linear.x;
     }
 
-    tf::Transform base_footprint_to_odom ( qt, vt );
-    transform_broadcaster_->sendTransform (
-        tf::StampedTransform ( base_footprint_to_odom, current_time,
-                               odom_frame, base_footprint_frame ) );
+    // get velocity in /odom frame
+    odom_.twist.twist.angular.z = parent->GetWorldAngularVel().z;
 
+    // convert velocity to child_frame_id (aka base_footprint)
+    math::Vector3 linear = parent->GetWorldLinearVel();
+    float yaw = pose.rot.GetYaw();
+    odom_.twist.twist.linear.x = cosf ( yaw ) * linear.x + sinf ( yaw ) * linear.y;
+    odom_.twist.twist.linear.y = cosf ( yaw ) * linear.y - sinf ( yaw ) * linear.x;
+
+    tf::Transform base_footprint_to_odom(qt, vt);
+    transform_broadcaster_->sendTransform(tf::StampedTransform(base_footprint_to_odom, current_time, odom_frame, base_footprint_frame));
 
     // set covariance
     odom_.pose.covariance[0] = 0.00001;
@@ -420,7 +408,6 @@ void GazeboSpheroController::publishOdometry ( double step_time )
     odom_.pose.covariance[21] = 1000000000000.0;
     odom_.pose.covariance[28] = 1000000000000.0;
     odom_.pose.covariance[35] = 0.001;
-
 
     // set header
     odom_.header.stamp = current_time;
