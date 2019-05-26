@@ -24,7 +24,7 @@
 #include <gazebo_plugins/gazebo_ros_utils.h>
 
 //Eigen
-#include <sphero_gazebo/Eigen/Dense>
+#include <Eigen/Dense>
 
 // ROS
 #include <ros/ros.h>

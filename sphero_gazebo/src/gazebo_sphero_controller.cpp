@@ -317,19 +317,19 @@ void GazeboSpheroController::UpdateOdometryEncoder()
     double fullTurn = 3.14159265358979323846 * 2;
     // specifies how long a full circle will take
     double fullTurnTime = fullTurn / rot_;
-    double circumference = fullTurnTime * x;
+    double circumference = fullTurnTime * x_;
     double radius = circumference / fullTurn; // = x_ / rot_;
     double angle = rot_ * seconds_since_last_update;
     // instantanious center of curvature - the point the current curve revolves around
-    double iccX = pose_.x - (radius * sin(currentOrientation))
-    double iccY = pose_.y + (radius * cos(currentOrientation))
+    double iccX = pose_.x - (radius * sin(currentOrientation));
+    double iccY = pose_.y + (radius * cos(currentOrientation));
     Eigen::Matrix3d rotateArountIcc;
     rotateArountIcc <<  cos(angle), -1 * sin(angle), 0,
                         sin(angle), cos(angle), 0,
                         0, 0, 1;
     Eigen::Vector3d translateIccToOrigin(pose_.x - iccX, pose_.y - iccY, currentOrientation);
     Eigen::Vector3d translateIccBack(iccX, iccY, angle);
-    Eigen::Vector3d odomTarget = (rotateArountIcc * translateIccToOrigin) * translateIccBack;
+    Eigen::Vector3d odomTarget = (rotateArountIcc * translateIccToOrigin) + translateIccBack;
 
     tf::Vector3 vt;
     vt = tf::Vector3(odomTarget[0], odomTarget[1], 0 );
@@ -367,6 +367,8 @@ void GazeboSpheroController::publishOdometry ( double step_time )
     tf::Quaternion qt;
     tf::Vector3 vt;
 
+    math::Pose pose = parent->GetWorldPose();
+
     if ( odom_source_ == ENCODER ) {
         // getting data form encoder integration
         qt = tf::Quaternion ( odom_.pose.pose.orientation.x, odom_.pose.pose.orientation.y, odom_.pose.pose.orientation.z, odom_.pose.pose.orientation.w );
@@ -374,8 +376,6 @@ void GazeboSpheroController::publishOdometry ( double step_time )
 
     }
     if ( odom_source_ == WORLD ) {
-        math::Pose pose = parent->GetWorldPose();
-
         qt = tf::Quaternion ( 0, 0, 0, 1 );
         vt = tf::Vector3 ( pose.pos.x, pose.pos.y, pose.pos.z );
 
