@@ -328,7 +328,7 @@ void GazeboSpheroController::UpdateOdometryEncoder()
     vt = tf::Vector3(pose_encoder_.x, pose_encoder_.y, 0);
 
     odom_.pose.pose.position.x = vt.x();
-    odom_.pose.pose.position.y = vt.y()
+    odom_.pose.pose.position.y = vt.y();
     odom_.pose.pose.position.z = vt.z();
 
     odom_.pose.pose.orientation.x = qt.x();

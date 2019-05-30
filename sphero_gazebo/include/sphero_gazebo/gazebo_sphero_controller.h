@@ -64,7 +64,7 @@ namespace gazebo {
 
     private:
       void publishOdometry(double step_time);
-      void publishPosition(double step_time);
+      void publishPosition();
       void getWheelVelocities();
       void publishWheelTF(); /// publishes the wheel tf's
       void publishWheelJointState();

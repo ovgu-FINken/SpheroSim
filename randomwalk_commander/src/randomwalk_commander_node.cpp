@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 	ROS_INFO("Build topic name %s", topicName.c_str());
 	MoveBaseClient client(topicName, true);
 	// wait for the move_base servers to come up for all robots
-	while(!client.waitForServer(ros::Duration(2.0))){
+	while(!client.waitForServer(ros::Duration(10.0))){
 		ROS_INFO("Wating for move_bases to be ready");
 	}
 
