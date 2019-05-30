@@ -18,10 +18,15 @@
 
 #include <map>
 
+#include <cmath>
+
 // Gazebo
 #include <gazebo/common/common.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo_plugins/gazebo_ros_utils.h>
+
+//Eigen
+#include <Eigen/Dense>
 
 // ROS
 #include <ros/ros.h>
@@ -63,8 +68,8 @@ namespace gazebo {
       virtual void FiniChild();
 
     private:
-      void publishOdometry(double step_time);
-      void publishPosition(double step_time);
+      void publishOdometry();
+      void publishPosition();
       void getWheelVelocities();
       void publishWheelTF(); /// publishes the wheel tf's
       void publishWheelJointState();
