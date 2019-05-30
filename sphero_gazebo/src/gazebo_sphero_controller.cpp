@@ -114,6 +114,8 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     cmd_vel_subscriber_ = gazebo_ros_->node()->subscribe(so);
     ROS_INFO("%s: Subscribe to %s!", gazebo_ros_->info(), command_topic_.c_str());
 
+    reportClient_ = gazebo_ros_->node()->serviceClient<errorInsert::Request>("/error_mapping/insert_error");
+
     if (this->publish_tf_)
     {
       odometry_publisher_ = gazebo_ros_->node()->advertise<nav_msgs::Odometry>(odometry_topic_, 1);
@@ -215,6 +217,7 @@ void GazeboSpheroController::UpdateChild()
         if (this->publish_tf_){
             publishOdometry();
             publishPosition();
+            publishDiff();
         }
         if (publishWheelTF_) {
             publishWheelTF();
@@ -357,6 +360,14 @@ void GazeboSpheroController::UpdateOdometryEncoder()
     odom_.pose.pose.orientation.y = qt.y();
     odom_.pose.pose.orientation.z = qt.z();
     odom_.pose.pose.orientation.w = qt.w();
+}
+
+void GazeboSpheroController::publishDiff() {
+    request_.planned_pose.linear.x = odom_.pose.pose.position.x;
+    request_.planned_pose.linear.y = odom_.pose.pose.position.y;
+    request_.actual_pose.linear.x = pose_.x;
+    request_.actual_pose.linear.y = pose_.y;
+    reportClient_.call(request);
 }
 
 void GazeboSpheroController::publishPosition()

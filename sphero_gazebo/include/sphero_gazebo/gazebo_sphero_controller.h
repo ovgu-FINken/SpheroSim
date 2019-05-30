@@ -37,6 +37,8 @@
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
 
+#include "mapping_node/errorInsert.h"
+
 // Custom Callback Queue
 #include <ros/callback_queue.h>
 #include <ros/advertise_options.h>
@@ -68,13 +70,15 @@ namespace gazebo {
       virtual void FiniChild();
 
     private:
+      void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& cmd_msg);
+      void getWheelVelocities();
+      void publishDiff();
       void publishOdometry();
       void publishPosition();
-      void getWheelVelocities();
       void publishWheelTF(); /// publishes the wheel tf's
       void publishWheelJointState();
+      void QueueThread();
       void UpdateOdometryEncoder();
-
 
       GazeboRosPtr gazebo_ros_;
       physics::ModelPtr parent;
@@ -112,10 +116,9 @@ namespace gazebo {
       // Custom Callback Queue
       ros::CallbackQueue queue_;
       boost::thread callback_queue_thread_;
-      void QueueThread();
 
-      // DiffDrive stuff
-      void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& cmd_msg);
+      ros::ServiceClient reportClient_;
+      errorInsert::Request request_;
 
       double x_;
       double rot_;
