@@ -60,7 +60,7 @@
       <positionTopic>pos</positionTopic>
       <publishWheelJointState>true</publishWheelJointState>
       <publishWheelTF>false</publishWheelTF>
-      <odometrySource>world</odometrySource>
+      <odometrySource>encoder</odometrySource>
       <robotBaseFrame>base_link</robotBaseFrame>
     </plugin>
   </gazebo>

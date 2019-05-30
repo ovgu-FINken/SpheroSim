@@ -125,12 +125,10 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
 
 
     // start custom queue for diff drive
-    this->callback_queue_thread_ =
-        boost::thread ( boost::bind ( &GazeboSpheroController::QueueThread, this ) );
+    this->callback_queue_thread_ = boost::thread ( boost::bind ( &GazeboSpheroController::QueueThread, this ) );
 
     // listen to the update event (broadcast every simulation iteration)
-    this->update_connection_ =
-        event::Events::ConnectWorldUpdateBegin ( boost::bind ( &GazeboSpheroController::UpdateChild, this ) );
+    this->update_connection_ = event::Events::ConnectWorldUpdateBegin ( boost::bind ( &GazeboSpheroController::UpdateChild, this ) );
 }
 
 void GazeboSpheroController::Reset()
@@ -215,8 +213,8 @@ void GazeboSpheroController::UpdateChild()
 
     if (seconds_since_last_update > update_period_) {
         if (this->publish_tf_){
-            publishOdometry(seconds_since_last_update);
-            publishPosition(seconds_since_last_update);
+            publishOdometry();
+            publishPosition();
         }
         if (publishWheelTF_) {
             publishWheelTF();
@@ -309,32 +307,47 @@ void GazeboSpheroController::UpdateOdometryEncoder()
     common::Time current_time = parent->GetWorld()->GetSimTime();
     double seconds_since_last_update = (current_time - last_odom_update_).Double();
     last_odom_update_ = current_time;
-
-    double currentOrientation = pose_.theta;
-    // rot_ specifies how long it will take for a full circle (angular velocity in rad/s)
-    // x_ specifies how fast the robot travels trough the circle (linear velocity in m/s)
-    // x_ / rot_ specifies the radius of the circle
-    double fullTurn = 3.14159265358979323846 * 2;
-    // specifies how long a full circle will take
-    double fullTurnTime = fullTurn / rot_;
-    double circumference = fullTurnTime * x_;
-    double radius = circumference / fullTurn; // = x_ / rot_;
-    double angle = rot_ * seconds_since_last_update;
-    // instantanious center of curvature - the point the current curve revolves around
-    double iccX = pose_.x - (radius * sin(currentOrientation));
-    double iccY = pose_.y + (radius * cos(currentOrientation));
-    Eigen::Matrix3d rotateArountIcc;
-    rotateArountIcc <<  cos(angle), -1 * sin(angle), 0,
-                        sin(angle), cos(angle), 0,
-                        0, 0, 1;
-    Eigen::Vector3d translateIccToOrigin(pose_.x - iccX, pose_.y - iccY, currentOrientation);
-    Eigen::Vector3d translateIccBack(iccX, iccY, angle);
-    Eigen::Vector3d odomTarget = (rotateArountIcc * translateIccToOrigin) + translateIccBack;
-
     tf::Vector3 vt;
-    vt = tf::Vector3(odomTarget[0], odomTarget[1], 0 );
     tf::Quaternion qt;
-    qt.setRPY(0, 0, odomTarget[2]);
+    if(x_ == 0) {
+        // no movement is currently happening, so odom is just the current position
+        vt = tf::Vector3(pose_.x, pose_.y, 0 );
+        double theta = pose_.theta + (rot_ * seconds_since_last_update);
+        qt.setRPY(0, 0, theta);
+    } else if (rot_ == 0) {
+        // no turning happens, just movement in a straight line
+        double distance = x_ * seconds_since_last_update;
+        vt = tf::Vector3(
+                (distance * cos(pose_.theta)) + pose_.x,
+                (distance * sin(pose_.theta)) + pose_.y,
+                0
+            );
+        qt.setRPY(0, 0, pose_.theta);
+    } else {
+        double currentOrientation = pose_.theta;
+        // rot_ specifies how long it will take for a full circle (angular velocity in rad/s)
+        // x_ specifies how fast the robot travels trough the circle (linear velocity in m/s)
+        // x_ / rot_ specifies the radius of the circle
+        double fullTurn = 3.14159265358979323846 * 2;
+        // specifies how long a full circle will take
+        double fullTurnTime = fullTurn / rot_;
+        double circumference = fullTurnTime * x_;
+        double radius = circumference / fullTurn; // = x_ / rot_;
+        double angle = rot_ * seconds_since_last_update;
+        // instantanious center of curvature - the point the current curve revolves around
+        double iccX = pose_.x - (radius * sin(currentOrientation));
+        double iccY = pose_.y + (radius * cos(currentOrientation));
+        Eigen::Matrix3d rotateArountIcc;
+        rotateArountIcc <<  cos(angle), -1 * sin(angle), 0,
+                            sin(angle), cos(angle), 0,
+                            0, 0, 1;
+        Eigen::Vector3d translateIccToOrigin(pose_.x - iccX, pose_.y - iccY, currentOrientation);
+        Eigen::Vector3d translateIccBack(iccX, iccY, angle);
+        Eigen::Vector3d odomTarget = (rotateArountIcc * translateIccToOrigin) + translateIccBack;
+
+        vt = tf::Vector3(odomTarget.x(), odomTarget.y(), 0 );
+        qt.setRPY(0, 0, odomTarget.z());
+    }
 
     odom_.pose.pose.position.x = vt.x();
     odom_.pose.pose.position.y = vt.y();
@@ -346,7 +359,7 @@ void GazeboSpheroController::UpdateOdometryEncoder()
     odom_.pose.pose.orientation.w = qt.w();
 }
 
-void GazeboSpheroController::publishPosition ( double step_time )
+void GazeboSpheroController::publishPosition()
 {
     // get the position from the simulation
     math::Pose world_pose = parent->GetWorldPose();
@@ -358,11 +371,9 @@ void GazeboSpheroController::publishPosition ( double step_time )
     position_publisher_.publish(pose_);
 }
 
-void GazeboSpheroController::publishOdometry ( double step_time )
+void GazeboSpheroController::publishOdometry()
 {    
     ros::Time current_time = ros::Time::now();
-    std::string odom_frame = gazebo_ros_->resolveTF ( odometry_frame_ );
-    std::string base_footprint_frame = gazebo_ros_->resolveTF ( robot_base_frame_ );
 
     tf::Quaternion qt;
     tf::Vector3 vt;
@@ -397,6 +408,9 @@ void GazeboSpheroController::publishOdometry ( double step_time )
     float yaw = pose.rot.GetYaw();
     odom_.twist.twist.linear.x = cosf ( yaw ) * linear.x + sinf ( yaw ) * linear.y;
     odom_.twist.twist.linear.y = cosf ( yaw ) * linear.y - sinf ( yaw ) * linear.x;
+
+    std::string odom_frame = gazebo_ros_->resolveTF(odometry_frame_);
+    std::string base_footprint_frame = gazebo_ros_->resolveTF(robot_base_frame_);
 
     tf::Transform base_footprint_to_odom(qt, vt);
     transform_broadcaster_->sendTransform(tf::StampedTransform(base_footprint_to_odom, current_time, odom_frame, base_footprint_frame));
