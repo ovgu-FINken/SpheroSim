@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   robot_controllers
   robot_controllers_interface
 )
+find_package(mapping_node REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
