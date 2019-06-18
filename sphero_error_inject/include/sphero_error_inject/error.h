@@ -7,7 +7,7 @@ namespace spheroSim {
 	 */
 	class Error {
 		public:
-			Error();
+			Error(float, float);
 		private:
 			float linearError;
 			float angularError;

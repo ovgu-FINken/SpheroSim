@@ -265,8 +265,8 @@ void GazeboSpheroController::getWheelVelocities()
     boost::mutex::scoped_lock scoped_lock ( lock );
     // TODO: retrieve error from current position --> errorMap-Service
     // inject a random error into the next movement instruction
-    double linearLimit = 0.9;
-    double angularLimit = 0.9;
+    double linearLimit = 0.02;
+    double angularLimit = 0.02;
     double linearFactor = getErrorFactor(linearLimit);
     double angularFactor = getErrorFactor(angularLimit);
     double vr = x_ * linearFactor;

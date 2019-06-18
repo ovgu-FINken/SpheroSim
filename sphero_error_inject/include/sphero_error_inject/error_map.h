@@ -14,7 +14,6 @@ namespace spheroSim {
 			Error* map;
 			static ErrorMap* instance;
 			ErrorMap();
-			ErrorMap(string csvPath, boolean header);
 	}
 }
 
