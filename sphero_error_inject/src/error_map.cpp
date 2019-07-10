@@ -6,32 +6,46 @@ namespace speheroSim {
 
 	ErrorMap* ErrorMap::getInstance() {
 		if(instance == 0) {
-			instance = new ErroMap();
+			instance = new ErrorMap();
 		}
 	}
 
 	// default constructor
 	ErrorMap::ErrorMap() {
+		// The size of the map, must match the file fed into the navStack
 		const int xSize = 100;
 		const int ySize = 100;
+		// TODO: make this configurable
 		const int numSpikes = 5;
 		// initialize the map
 		Error map[xSize * ySize];
-		// TODO: randomly generate positions for "Distotion-Spikes"
+		// randomly generate positions for "Distotion-Spikes"
 	    std::uniform_real_distribution<int> unifX(0, xSize);
 	    std::uniform_real_distribution<int> unifY(0, ySize);
 	    std::default_random_engine re;
+	    geometryMsg::Pose2D errorPositions[numSpikes];
 	    for (int i = 0; i < numSpikes; ++i)
 	    {
-		    int randX = unifX(re);
-		    int randY = unifY(re);
+		    geometryMsg::Pose2D errorPos();
+		    errorPos.x = unifX(re);
+		    errorPos.y = unifY(re);
+		    errorPositions[i] = errorPos;
 	    }
 		// iterate over the map and calculate each cell's error by it's distances to all spikes
 		for (int x = 0; x < xSize; ++x) {
 			for (int y = 0; y < ySize; ++y) {
-				// TODO: get the distance to the spikes
-				Error error();
-				map[x * y] = error;
+				// get the distance to the spikes
+				float linearError = 0;
+				float angularError = 0;
+				for (int s = 0; s < numSpikes; ++s)
+				{
+					geometryMsg::Pose2D spike = errorPositions[s];
+					double distance = sqrt(pow(spike.x - x) + pow(spike.y - y));
+					// error is the inverted distance, so a bigger distance results in a smaller error.
+					linearError += 1/distance;
+					angularError += 1/distance;
+				}
+				map[x * y] = Error(linearError, angularError);
 			}
 		}
 	}
