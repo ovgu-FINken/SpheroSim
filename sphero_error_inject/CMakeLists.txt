@@ -104,10 +104,9 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  CATKIN_DEPENDS message_runtime
-#  INCLUDE_DIRS include
-#  LIBRARIES sphero_error_inject
-#  CATKIN_DEPENDS roscpp std_msgs
+  CATKIN_DEPENDS message_runtime roscpp std_msgs
+  INCLUDE_DIRS include
+  LIBRARIES sphero_error_inject
 #  DEPENDS system_lib
 )
 
@@ -118,14 +117,18 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
 )
 
+link_directories(
+  /opt/ros/kinetic/lib
+)
+
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/sphero_error_inject.cpp
-# )
+ add_library(
+   sphero_error_inject src/error_map_node.cpp
+ )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -199,3 +202,7 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(errormap src/error_map_node.cpp)
+target_link_libraries(errormap ${catkin_LIBRARIES})
+add_dependencies(errormap sphero_error_inject_generate_messages_cpp)

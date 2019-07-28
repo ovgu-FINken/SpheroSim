@@ -104,18 +104,19 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-INCLUDE_DIRS include
+  INCLUDE_DIRS
+    include
   CATKIN_DEPENDS
     control_toolbox
     gazebo_ros
-#    gazebo_plugins
+    #gazebo_plugins
     robot_controllers
     robot_controllers_interface
   DEPENDS
     gazebo
     SDF
   LIBRARIES
-	gazebo_sphero_controller
+	 gazebo_sphero_controller
 )
 
 ###########

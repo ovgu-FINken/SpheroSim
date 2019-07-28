@@ -8,6 +8,7 @@ namespace speheroSim {
 		if(instance == 0) {
 			instance = new ErrorMap();
 		}
+		return &instance;
 	}
 
 	// default constructor
@@ -31,9 +32,14 @@ namespace speheroSim {
 		    errorPos.y = unifY(re);
 		    errorPositions[i] = errorPos;
 	    }
+		// write the created map out to a file for later comparison
+	    time_t t = std::time(0);
+    	long int now = static_cast<long int> (t);
+		std::ofstram mapFile;
+		mapFile.open("/home/stephan/sphero_map.csv");
 		// iterate over the map and calculate each cell's error by it's distances to all spikes
-		for (int x = 0; x < xSize; ++x) {
-			for (int y = 0; y < ySize; ++y) {
+		for (int y = 0; y < ySize; ++y) {
+			for (int x = 0; x < xSize; ++x) {
 				// get the distance to the spikes
 				float linearError = 0;
 				float angularError = 0;
@@ -46,8 +52,11 @@ namespace speheroSim {
 					angularError += 1/distance;
 				}
 				map[x * y] = Error(linearError, angularError);
+				mapFile << linearError.to_string() + "|" + angularError.to_string() + ";";
 			}
+			mapFile << "\n";
 		}
+		mapFile.close();
 	}
 
 	Error ErrorMap::GetPositionError(geometryMsg::Pose2D pose) {

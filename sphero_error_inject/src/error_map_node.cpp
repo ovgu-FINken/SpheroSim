@@ -8,7 +8,6 @@ bool getPositionError(sphero_error_inject::Error::Request &req, sphero_error_inj
 }
 
 int main(int argc, char **argv) {
-	initMap();
 	ros::init(argc, argv, "error_map_server");
 	ros::NodeHandle n;
 	ros::ServiceServer service = n.advertiseService("get_position_error", getPositionError)
