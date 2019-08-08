@@ -20,6 +20,8 @@
 
 #include <sphero_gazebo/gazebo_sphero_controller.h>
 
+#include <sphero_error_inject/Error.h>
+
 #include <gazebo/math/gzmath.hh>
 #include <sdf/sdf.hh>
 
@@ -59,7 +61,7 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     gazebo_ros_->getParameter<double> ( wheel_diameter_, "wheelDiameter", 0.1 );
     gazebo_ros_->getParameter<double> ( wheel_accel, "wheelAcceleration", 0.0 );
     gazebo_ros_->getParameter<double> ( wheel_torque, "wheelTorque", 0.02 );
-    gazebo_ros_->getParameter<double> ( update_rate_, "updateRate", 100.0 );
+    gazebo_ros_->getParameter<double> ( update_rate_, "updateRate", 10.0 );
     std::map<std::string, OdomSource> odomOptions;
     odomOptions["encoder"] = ENCODER;
     odomOptions["world"] = WORLD;
@@ -118,6 +120,8 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
       position_publisher_ = gazebo_ros_->node()->advertise<geometry_msgs::Pose2D>(position_topic_, 1);
       ROS_INFO("%s: Advertise position on %s !", gazebo_ros_->info(), position_topic_.c_str());
     }
+
+    errorClient_ = gazebo_ros_->node()->serviceClient<sphero_error_inject::Error>("get_position_error");
 
     // start custom queue for diff drive
     this->callback_queue_thread_ = boost::thread ( boost::bind ( &GazeboSpheroController::QueueThread, this ) );
@@ -265,10 +269,15 @@ void GazeboSpheroController::getWheelVelocities()
     boost::mutex::scoped_lock scoped_lock ( lock );
     // TODO: retrieve error from current position --> errorMap-Service
     // inject a random error into the next movement instruction
-    double linearLimit = 0.02;
-    double angularLimit = 0.02;
+    double linearLimit = 0.01;
+    double angularLimit = 0.01;
     double linearFactor = getErrorFactor(linearLimit);
     double angularFactor = getErrorFactor(angularLimit);
+    sphero_error_inject::Error errorService;
+    errorService.request.pose = pose_;
+    errorClient_.call(errorService);
+    linearFactor += errorService.response.linearError;
+    angularFactor += errorService.response.angularError;
     double vr = x_ * linearFactor;
     double va = rot_ * angularFactor;
     // hand the movement command over to gazebo

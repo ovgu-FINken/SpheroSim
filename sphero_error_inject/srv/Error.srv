@@ -1,5 +1,5 @@
 Header header
-geometry_msgs/Pose pose
+geometry_msgs/Pose2D pose
 ---
-int32 linearError
-int32 angularError
+float32 linearError
+float32 angularError

@@ -88,10 +88,11 @@ namespace gazebo {
       // ROS STUFF
       ros::Publisher odometry_publisher_;
       ros::Publisher position_publisher_;
+      ros::Publisher joint_state_publisher_;
       ros::Subscriber cmd_vel_subscriber_;
+      ros::ServiceClient errorClient_;
       boost::shared_ptr<tf::TransformBroadcaster> transform_broadcaster_;
       sensor_msgs::JointState joint_state_;
-      ros::Publisher joint_state_publisher_;
       nav_msgs::Odometry odom_;
       geometry_msgs::Pose2D pose_;
       std::string tf_prefix_;
@@ -126,9 +127,9 @@ namespace gazebo {
       geometry_msgs::Pose2D pose_encoder_;
       common::Time last_odom_update_;
 
-    // Flags
-    bool publishWheelTF_;
-    bool publishWheelJointState_;
+      // Flags
+      bool publishWheelTF_;
+      bool publishWheelJointState_;
 
   };
 

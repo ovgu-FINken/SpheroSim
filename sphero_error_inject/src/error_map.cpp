@@ -19,23 +19,23 @@ namespace spheroSim {
 	// default constructor
 	ErrorMap::ErrorMap() {
 		// The size of the map, must match the file fed into the navStack
-		const int xSize = 100;
-		const int ySize = 100;
+		const int xSize = 4000;
+		const int ySize = 3000;
 		// TODO: make this configurable
-		const int numSpikes = 5;
+		const int numSpikes = 10;
 		// initialize the map
 		ErrorCell map[xSize * ySize];
 		ROS_INFO("starting to generate error spikes...");
 		// randomly generate positions for "Distotion-Spikes"
-	    std::uniform_real_distribution<float> unifX(0, xSize);
-	    std::uniform_real_distribution<float> unifY(0, ySize);
+	    std::uniform_real_distribution<float> unifX(0, xSize-1);
+	    std::uniform_real_distribution<float> unifY(0, ySize-1);
 	    std::default_random_engine re;
-	    geometry_msgs::Pose errorPositions[numSpikes];
+	    geometry_msgs::Pose2D errorPositions[numSpikes];
 	    for (int i = 0; i < numSpikes; ++i)
 	    {
-		    geometry_msgs::Pose errorPos{};
-		    errorPos.position.x = static_cast<int>(unifX(re));
-		    errorPos.position.y = static_cast<int>(unifY(re));
+		    geometry_msgs::Pose2D errorPos{};
+		    errorPos.x = static_cast<int>(unifX(re));
+		    errorPos.y = static_cast<int>(unifY(re));
 		    errorPositions[i] = errorPos;
 	    }
 		// write the created map out to a file for later comparison
@@ -52,8 +52,8 @@ namespace spheroSim {
 				float angularError = 0;
 				for (int s = 0; s < numSpikes; ++s)
 				{
-					geometry_msgs::Pose spike = errorPositions[s];
-					double distance = sqrt(pow(spike.position.x - x, 2) + pow(spike.position.y - y, 2));
+					geometry_msgs::Pose2D spike = errorPositions[s];
+					double distance = sqrt(pow(spike.x - x, 2) + pow(spike.y - y, 2));
 					// error is the inverted distance, so a bigger distance results in a smaller error.
 					linearError += 1/distance;
 					angularError += 1/distance;
@@ -69,7 +69,14 @@ namespace spheroSim {
 	}
 
 	ErrorCell ErrorMap::GetPositionError(geometry_msgs::Pose pose) {
-		// TODO: lookup in the map (transform position to array index)
-		return map[0];
+		// The size of the map, must match the file fed into the navStack
+		const int xSize = 4000;
+		const int ySize = 3000;
+		const int index = (xSize * pose.position.y) + pose.position.x;
+		if(index > (xSize * ySize)) {
+			//TODO: Error, out of bounds
+			ROS_ERROR("Error injection for requested pose is out of bounds!")
+		}
+		return map[index];
 	}
 }

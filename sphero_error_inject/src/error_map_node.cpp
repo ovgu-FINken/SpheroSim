@@ -6,7 +6,7 @@
 
 
 bool getPositionError(sphero_error_inject::Error::Request &req, sphero_error_inject::Error::Response &res) {
-	geometry_msgs::Pose pose = req.pose;
+	geometry_msgs::Pose2D pose = req.pose;
 	spheroSim::ErrorCell error = spheroSim::ErrorMap::getInstance()->GetPositionError(pose);
 	res.linearError = error.linearError;
 	res.angularError = error.angularError;

@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   gazebo_ros
   robot_controllers
   robot_controllers_interface
+  sphero_error_inject
 )
 
 ## System dependencies are found with CMake's conventions
@@ -116,7 +117,7 @@ catkin_package(
     gazebo
     SDF
   LIBRARIES
-	 gazebo_sphero_controller
+	  gazebo_sphero_controller
 )
 
 ###########
@@ -139,8 +140,8 @@ link_directories(
 )
 
 ## Declare a C++ library
- add_library(gazebo_sphero_controller src/gazebo_sphero_controller.cpp
- )
+add_library(gazebo_sphero_controller src/gazebo_sphero_controller.cpp)
+
 target_link_libraries(gazebo_sphero_controller gazebo_ros_utils ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 ## Add cmake target dependencies of the library
