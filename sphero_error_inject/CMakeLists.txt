@@ -143,7 +143,7 @@ add_executable(error_inject_node src/error_map_node.cpp src/error_map.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(error_inject_node sphero_error_inject_generate_messages_cpp)
+add_dependencies(sphero_error_inject_generate_messages_cpp error_inject_node)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(error_inject_node ${catkin_LIBRARIES})
