@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   gazebo_ros
   robot_controllers
   robot_controllers_interface
+  sphero_error_inject
 )
 find_package(mapping_node REQUIRED)
 
@@ -105,18 +106,19 @@ find_package(mapping_node REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-INCLUDE_DIRS include
+  INCLUDE_DIRS
+    include
   CATKIN_DEPENDS
     control_toolbox
     gazebo_ros
-#    gazebo_plugins
+    #gazebo_plugins
     robot_controllers
     robot_controllers_interface
   DEPENDS
     gazebo
     SDF
   LIBRARIES
-	gazebo_sphero_controller
+	  gazebo_sphero_controller
 )
 
 ###########
@@ -139,8 +141,8 @@ link_directories(
 )
 
 ## Declare a C++ library
- add_library(gazebo_sphero_controller src/gazebo_sphero_controller.cpp
- )
+add_library(gazebo_sphero_controller src/gazebo_sphero_controller.cpp)
+
 target_link_libraries(gazebo_sphero_controller gazebo_ros_utils ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 ## Add cmake target dependencies of the library

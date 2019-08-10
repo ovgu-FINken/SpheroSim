@@ -20,6 +20,8 @@
 
 #include <sphero_gazebo/gazebo_sphero_controller.h>
 
+#include <sphero_error_inject/Error.h>
+
 #include <gazebo/math/gzmath.hh>
 #include <sdf/sdf.hh>
 
@@ -59,12 +61,11 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     gazebo_ros_->getParameter<double> ( wheel_diameter_, "wheelDiameter", 0.1 );
     gazebo_ros_->getParameter<double> ( wheel_accel, "wheelAcceleration", 0.0 );
     gazebo_ros_->getParameter<double> ( wheel_torque, "wheelTorque", 0.02 );
-    gazebo_ros_->getParameter<double> ( update_rate_, "updateRate", 100.0 );
+    gazebo_ros_->getParameter<double> ( update_rate_, "updateRate", 10.0 );
     std::map<std::string, OdomSource> odomOptions;
     odomOptions["encoder"] = ENCODER;
     odomOptions["world"] = WORLD;
     gazebo_ros_->getParameter<OdomSource> ( odom_source_, "odometrySource", odomOptions, WORLD );
-
 
     joints_.resize ( 2 );
     joints_[LEFT] = gazebo_ros_->getJoint ( parent, "leftJoint", "left_joint" );
@@ -75,8 +76,7 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
 
     this->publish_tf_ = true;
     if (!_sdf->HasElement("publishTf")) {
-      ROS_WARN("GazeboSpheroController Plugin (ns = %s) missing <publishTf>, defaults to %d",
-          this->robot_namespace_.c_str(), this->publish_tf_);
+      ROS_WARN("GazeboSpheroController Plugin (ns = %s) missing <publishTf>, defaults to %d", this->robot_namespace_.c_str(), this->publish_tf_);
     } else {
       this->publish_tf_ = _sdf->GetElement("publishTf")->Get<bool>();
     }
@@ -94,7 +94,6 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     rot_ = 0;
     alive_ = true;
 
-
     if (this->publishWheelJointState_)
     {
         joint_state_publisher_ = gazebo_ros_->node()->advertise<sensor_msgs::JointState>("joint_states", 1000);
@@ -106,8 +105,7 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     // ROS: Subscribe to the velocity command topic (usually "cmd_vel")
     ROS_INFO("%s: Try to subscribe to %s!", gazebo_ros_->info(), command_topic_.c_str());
 
-    ros::SubscribeOptions so =
-        ros::SubscribeOptions::create<geometry_msgs::Twist>(command_topic_, 1,
+    ros::SubscribeOptions so = ros::SubscribeOptions::create<geometry_msgs::Twist>(command_topic_, 1,
                 boost::bind(&GazeboSpheroController::cmdVelCallback, this, _1),
                 ros::VoidPtr(), &queue_);
 
@@ -125,6 +123,7 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
       ROS_INFO("%s: Advertise position on %s !", gazebo_ros_->info(), position_topic_.c_str());
     }
 
+    errorClient_ = gazebo_ros_->node()->serviceClient<sphero_error_inject::Error>("get_position_error");
 
     // start custom queue for diff drive
     this->callback_queue_thread_ = boost::thread ( boost::bind ( &GazeboSpheroController::QueueThread, this ) );
@@ -225,12 +224,9 @@ void GazeboSpheroController::UpdateChild()
         if (publishWheelJointState_) {
             publishWheelJointState();
         }
-
         // Update robot in case new velocities have been requested
         getWheelVelocities();
-
         double current_speed[2];
-
         current_speed[LEFT] = joints_[LEFT]->GetVelocity ( 0 )   * ( wheel_diameter_ / 2.0 );
         current_speed[RIGHT] = joints_[RIGHT]->GetVelocity ( 0 ) * ( wheel_diameter_ / 2.0 );
 
@@ -245,14 +241,10 @@ void GazeboSpheroController::UpdateChild()
                 wheel_speed_instr_[LEFT]+=fmin ( wheel_speed_[LEFT]-current_speed[LEFT],  wheel_accel * seconds_since_last_update );
             else
                 wheel_speed_instr_[LEFT]+=fmax ( wheel_speed_[LEFT]-current_speed[LEFT], -wheel_accel * seconds_since_last_update );
-
             if ( wheel_speed_[RIGHT]>current_speed[RIGHT] )
                 wheel_speed_instr_[RIGHT]+=fmin ( wheel_speed_[RIGHT]-current_speed[RIGHT], wheel_accel * seconds_since_last_update );
             else
                 wheel_speed_instr_[RIGHT]+=fmax ( wheel_speed_[RIGHT]-current_speed[RIGHT], -wheel_accel * seconds_since_last_update );
-
-            // ROS_INFO("actual wheel speed = %lf, issued wheel speed= %lf", current_speed[LEFT], wheel_speed_[LEFT]);
-            // ROS_INFO("actual wheel speed = %lf, issued wheel speed= %lf", current_speed[RIGHT],wheel_speed_[RIGHT]);
 
             joints_[LEFT]->SetParam ( "vel", 0,wheel_speed_instr_[LEFT] / ( wheel_diameter_ / 2.0 ) );
             joints_[RIGHT]->SetParam ( "vel", 0,wheel_speed_instr_[RIGHT] / ( wheel_diameter_ / 2.0 ) );
@@ -272,14 +264,34 @@ void GazeboSpheroController::FiniChild()
     callback_queue_thread_.join();
 }
 
+// calculates the factor to apply to a movement command to inject a random error
+double GazeboSpheroController::getErrorFactor(double limit)
+{
+    double lower_bound = limit * -1;
+    std::uniform_real_distribution<double> unif(lower_bound,limit);
+    std::default_random_engine re;
+    double random = unif(re);
+    return 1 + random;   
+}
+
 void GazeboSpheroController::getWheelVelocities()
 {
     boost::mutex::scoped_lock scoped_lock ( lock );
-
-    double vr = x_;
-    double va = rot_;
-
-    wheel_speed_[LEFT] = vr; // + va * wheel_separation_ / 2.0;
+    // TODO: retrieve error from current position --> errorMap-Service
+    // inject a random error into the next movement instruction
+    double linearLimit = 0.01;
+    double angularLimit = 0.01;
+    double linearFactor = getErrorFactor(linearLimit);
+    double angularFactor = getErrorFactor(angularLimit);
+    sphero_error_inject::Error errorService;
+    errorService.request.pose = pose_;
+    errorClient_.call(errorService);
+    linearFactor += errorService.response.linearError;
+    angularFactor += errorService.response.angularError;
+    double vr = x_ * linearFactor;
+    double va = rot_ * angularFactor;
+    // hand the movement command over to gazebo
+    wheel_speed_[LEFT] = vr;
     wheel_speed_[RIGHT] = va * wheel_separation_ / 2.0;
 }
 

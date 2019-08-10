@@ -25,6 +25,9 @@
   <!-- spawn static transform from map to odom frame -->
   <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher" respawn="true" args="0 0 0 0 0 0 /map /odom_frame 1000" />
 
+  <!-- spawn the error map for reporting -->
+  <node pkg="sphero_error_inject" name="sphero_error_inject" type="error_inject_node" />
+
   <!-- Launching everything needed per sphero robot -->
   <group ns="sphero1">
     <include file="$(find sphero_gazebo)/launch/sphero.launch.xml">
