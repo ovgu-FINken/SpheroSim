@@ -68,14 +68,14 @@ namespace spheroSim {
 		ROS_INFO("Done writing file.");
 	}
 
-	ErrorCell ErrorMap::GetPositionError(geometry_msgs::Pose pose) {
+	ErrorCell ErrorMap::GetPositionError(geometry_msgs::Pose2D pose) {
 		// The size of the map, must match the file fed into the navStack
 		const int xSize = 4000;
 		const int ySize = 3000;
-		const int index = (xSize * pose.position.y) + pose.position.x;
+		const int index = (xSize * pose.y) + pose.x;
 		if(index > (xSize * ySize)) {
 			//TODO: Error, out of bounds
-			ROS_ERROR("Error injection for requested pose is out of bounds!")
+			ROS_ERROR("Error injection for requested pose is out of bounds!");
 		}
 		return map[index];
 	}
