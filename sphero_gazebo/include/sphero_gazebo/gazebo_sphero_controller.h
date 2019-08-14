@@ -37,7 +37,7 @@
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
 
-#include "mapping_node/errorInsert.h"
+#include "sphero_error_mapping/error_insert.h"
 
 // Custom Callback Queue
 #include <ros/callback_queue.h>
@@ -46,6 +46,8 @@
 // Boost
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
+
+using namespace sphero_error_mapping;
 
 namespace gazebo {
 
@@ -100,6 +102,7 @@ namespace gazebo {
       ros::Publisher joint_state_publisher_;
       ros::Subscriber cmd_vel_subscriber_;
       ros::ServiceClient errorClient_;
+      ros::ServiceClient reportClient_;
       boost::shared_ptr<tf::TransformBroadcaster> transform_broadcaster_;
       sensor_msgs::JointState joint_state_;
       nav_msgs::Odometry odom_;
@@ -118,9 +121,6 @@ namespace gazebo {
       // Custom Callback Queue
       ros::CallbackQueue queue_;
       boost::thread callback_queue_thread_;
-
-      ros::ServiceClient reportClient_;
-      errorInsert::Request request_;
 
       double x_;
       double rot_;

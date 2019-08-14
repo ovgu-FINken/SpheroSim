@@ -1,7 +1,7 @@
 Header header
 string robotId
 geometry_msgs/Twist planned_velocities
-geometry_msgs/Pose planned_pose
+geometry_msgs/Pose2D planned_pose
 geometry_msgs/Twist actual_velocities
-geometry_msgs/Pose actual_pose
+geometry_msgs/Pose2D actual_pose
 ---

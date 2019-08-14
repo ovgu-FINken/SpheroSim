@@ -50,9 +50,9 @@
   <build_depend>gazebo_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
-  <build_depend>mapping_node</build_depend>
 
   <build_depend>sphero_error_inject</build_depend>
+  <build_depend>sphero_error_mapping</build_depend>
 
   <run_depend>actionlib</run_depend>
   <run_depend>control_toolbox</run_depend>
@@ -71,6 +71,7 @@
   <run_depend>xacro</run_depend>
 
   <run_depend>sphero_error_inject</run_depend>
+  <run_depend>sphero_error_mapping</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

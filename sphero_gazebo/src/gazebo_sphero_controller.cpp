@@ -20,12 +20,16 @@
 
 #include <sphero_gazebo/gazebo_sphero_controller.h>
 
-#include <sphero_error_inject/Error.h>
+#include <sphero_error_inject/error.h>
+#include <sphero_error_mapping/error_insert.h>
 
 #include <gazebo/math/gzmath.hh>
 #include <sdf/sdf.hh>
 
 #include <ros/ros.h>
+
+using namespace sphero_error_mapping;
+using namespace sphero_error_inject;
 
 namespace gazebo
 {
@@ -112,7 +116,7 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
     cmd_vel_subscriber_ = gazebo_ros_->node()->subscribe(so);
     ROS_INFO("%s: Subscribe to %s!", gazebo_ros_->info(), command_topic_.c_str());
 
-    reportClient_ = gazebo_ros_->node()->serviceClient<errorInsert::Request>("/error_mapping/insert_error");
+    reportClient_ = gazebo_ros_->node()->serviceClient<sphero_error_mapping::error_insert>("/sphero_error_mapping/insert_error");
 
     if (this->publish_tf_)
     {
@@ -123,7 +127,7 @@ void GazeboSpheroController::Load ( physics::ModelPtr _parent, sdf::ElementPtr _
       ROS_INFO("%s: Advertise position on %s !", gazebo_ros_->info(), position_topic_.c_str());
     }
 
-    errorClient_ = gazebo_ros_->node()->serviceClient<sphero_error_inject::Error>("get_position_error");
+    errorClient_ = gazebo_ros_->node()->serviceClient<sphero_error_inject::error>("get_position_error");
 
     // start custom queue for diff drive
     this->callback_queue_thread_ = boost::thread ( boost::bind ( &GazeboSpheroController::QueueThread, this ) );
@@ -283,7 +287,7 @@ void GazeboSpheroController::getWheelVelocities()
     double angularLimit = 0.01;
     double linearFactor = getErrorFactor(linearLimit);
     double angularFactor = getErrorFactor(angularLimit);
-    sphero_error_inject::Error errorService;
+    sphero_error_inject::error errorService;
     errorService.request.pose = pose_;
     errorClient_.call(errorService);
     linearFactor += errorService.response.linearError;
@@ -375,11 +379,12 @@ void GazeboSpheroController::UpdateOdometryEncoder()
 }
 
 void GazeboSpheroController::publishDiff() {
-    request_.planned_pose.linear.x = odom_.pose.pose.position.x;
-    request_.planned_pose.linear.y = odom_.pose.pose.position.y;
-    request_.actual_pose.linear.x = pose_.x;
-    request_.actual_pose.linear.y = pose_.y;
-    reportClient_.call(request);
+    sphero_error_mapping::error_insert mappingService;
+    mappingService.request.planned_pose.x = odom_.pose.pose.position.x;
+    mappingService.request.planned_pose.y = odom_.pose.pose.position.y;
+    mappingService.request.actual_pose.x = pose_.x;
+    mappingService.request.actual_pose.y = pose_.y;
+    reportClient_.call(mappingService);
 }
 
 void GazeboSpheroController::publishPosition()

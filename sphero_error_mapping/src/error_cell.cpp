@@ -1,17 +1,13 @@
-#include "include/ErrorCell.h"
+#include <sphero_error_mapping/error_cell.h>
 
-
-ErrorCell::ErrorCell(int x, int y){
-	this.x = x;
-	this.y = y;
-}
+using namespace sphero_error_mapping;
 
 /**
  * Inserts an error report into the cell for future error computations.
  * \param error The pointer to the error to insert.
  */
-void ErrorCell::insert_report(ErrorInformation& error){
-	history.push_back(error);
+void ErrorCell::insert_report(ErrorInformation* error){
+	history.push_back(*error);
 }
 
 /**
@@ -24,22 +20,22 @@ ErrorInformation* ErrorCell::aggregateError(int historyLength){
 	if(historyLength > 0 && historyLength < limit){
 		limit = historyLength;
 	}
-	ErrorInformation error = new ErrorInformation();
+	ErrorInformation* error = new ErrorInformation();
 	// the more measurements are takent into account, the closer the resulting quality is to 1
-	error.quality = 1 - (1/limit);
+	error->quality = 1 - (1/limit);
 	// compute the mean, since we have exact values.
 	// TODO: compute via Kalman Filter for un-precise measurements
 	float linearError = 0;
 	float angularError = 0;
 	for (int i = 0; i < limit; ++i)
 	{
-		errorInsert item = history[i];
+		ErrorInformation item = history[i];
 		linearError += item.linearError;
 		angularError += item.angularError;
 	}
-	error.linearError = linearError / limit;
-	error.angularError = angularError / limit;
-	return &error;
+	error->linearError = linearError / limit;
+	error->angularError = angularError / limit;
+	return error;
 }
 
 /**
@@ -47,5 +43,5 @@ ErrorInformation* ErrorCell::aggregateError(int historyLength){
  * \return The error information of the cell.
  */
 ErrorInformation* ErrorCell::get_error(){
-	return this.aggregateError(-1);
+	return this->aggregateError(-1);
 }

@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>error_mapping</name>
+  <name>sphero_error_mapping</name>
   <version>0.0.1</version>
-  <description>The error_mapping package used to create a centralized error map from nominal-actual comparison of robot's movements.</description>
+  <description>The sphero_error_mapping package used to create a centralized error map from nominal-actual comparison of robot's movements.</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
   <maintainer email="stephan.doerfler@st.ovgu.de">Stephan Dörfler</maintainer>
-  <maintainer email="christoph.steup@ovgu.de">Christoph Steup</maintainer>
+  <maintainer email="steup@ovgu.de">Christoph Steup</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
@@ -49,14 +49,13 @@
   <!--   <test_depend>gtest</test_depend> -->
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
+  <buildtool_depend>catkin</buildtool_depend>
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
-  <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>geometry_msgs</build_depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
   <build_depend>roscpp</build_depend>
-  <build_export_depend>geometry_msgs</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
-  <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>roscpp</exec_depend>
 
 
