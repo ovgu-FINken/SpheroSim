@@ -19,8 +19,8 @@ namespace spheroSim {
 	// default constructor
 	ErrorMap::ErrorMap() {
 		// The size of the map, must match the file fed into the navStack
-		const int xSize = 4000;
-		const int ySize = 3000;
+		const int xSize = 800;
+		const int ySize = 600;
 		// TODO: make this configurable
 		const int numSpikes = 10;
 		// initialize the map
@@ -42,8 +42,7 @@ namespace spheroSim {
 	    time_t t = std::time(0);
     	long int now = static_cast<long int> (t);
 		std::ofstream mapFile;
-		mapFile.open("/home/stephan/sphero_map.csv");
-		ROS_INFO("starting to generate map...");
+		mapFile.open("/home/stephan/spheroSim/sphero_map_" + std::to_string(now) + ".csv");
 		// iterate over the map and calculate each cell's error by it's distances to all spikes
 		for (int y = 0; y < ySize; ++y) {
 			for (int x = 0; x < xSize; ++x) {
@@ -63,15 +62,13 @@ namespace spheroSim {
 			}
 			mapFile << "\n";
 		}
-		ROS_INFO("writing map file...");
 		mapFile.close();
-		ROS_INFO("Done writing file.");
 	}
 
 	ErrorCell ErrorMap::GetPositionError(geometry_msgs::Pose2D pose) {
 		// The size of the map, must match the file fed into the navStack
-		const int xSize = 4000;
-		const int ySize = 3000;
+		const int xSize = 800;
+		const int ySize = 600;
 		const int index = (xSize * pose.y) + pose.x;
 		if(index > (xSize * ySize)) {
 			//TODO: Error, out of bounds

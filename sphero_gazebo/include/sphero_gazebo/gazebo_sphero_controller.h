@@ -107,6 +107,7 @@ namespace gazebo {
       sensor_msgs::JointState joint_state_;
       nav_msgs::Odometry odom_;
       geometry_msgs::Pose2D pose_;
+      geometry_msgs::Pose2D last_pose_;
       std::string tf_prefix_;
 
       boost::mutex lock;

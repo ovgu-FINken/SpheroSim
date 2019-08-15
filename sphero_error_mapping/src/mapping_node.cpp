@@ -7,12 +7,15 @@
 #include <sphero_error_mapping/error_insert.h>
 #include <sphero_error_mapping/get_position_error.h>
 
+#include <signal.h>
+#include <iostream>
+#include <fstream>
 #include <vector>
 
 using namespace sphero_error_mapping;
 
-const int MAPSIZE_VERTICAL = 100;
-const int MAPSIZE_HORIZONTAL = 100;
+const int MAPSIZE_HORIZONTAL = 800;
+const int MAPSIZE_VERTICAL = 600;
 
 std::vector<ErrorCell> map;
 
@@ -21,15 +24,16 @@ std::vector<ErrorCell> map;
  */
 bool insert_error(error_insert::Request &request, error_insert::Response &response)
 {
-    int request_x = request.planned_pose.x;
-    int request_y = request.planned_pose.y;
+    int request_x = request.pose.x;
+    int request_y = request.pose.y;
     // find the correct cell in the map to update
     int cellIndex = (MAPSIZE_HORIZONTAL * request_y) + (request_x % MAPSIZE_HORIZONTAL);
     ErrorCell insertCell = map[cellIndex];
     // define the data for the update
     ErrorInformation* report = new ErrorInformation();
     report->age = ros::Time::now().toSec();
-    // TODO: handle the difference-transform to put it into the error report.
+    report->linearError = request.linearError;
+    report->angularError = request.angularError;
     insertCell.insert_report(report);
     return true;
 }
@@ -39,8 +43,8 @@ bool insert_error(error_insert::Request &request, error_insert::Response &respon
  */
 bool get_point_error(get_position_error::Request &request, get_position_error::Response &response)
 {
-    int request_x = request.point.x;
-    int request_y = request.point.y;
+    int request_x = request.pose.x;
+    int request_y = request.pose.y;
     int cellIndex = (MAPSIZE_HORIZONTAL * request_y) + (request_x % MAPSIZE_HORIZONTAL);
     ErrorCell requestCell = map[cellIndex];
     ErrorInformation *errorInfo = requestCell.get_error();
@@ -57,6 +61,24 @@ bool get_point_error(get_position_error::Request &request, get_position_error::R
 void publish_error_map()
 {
 
+}
+
+void shutdownHandler() {
+	// write the created map out to a file for evaluation
+	time_t t = std::time(0);
+	long int now = static_cast<long int> (t);
+	std::ofstream mapFile;
+	mapFile.open("/home/stephan/spheroSim/sphero_error_map_" + std::to_string(now) + ".csv");
+	for(int y = 0; y < MAPSIZE_VERTICAL; ++y) {
+		for(int x = 0; x < MAPSIZE_HORIZONTAL; ++x) {
+			int cellIndex = (y * MAPSIZE_HORIZONTAL) + x;
+			ErrorCell cell = map[cellIndex];
+    		ErrorInformation *errorInfo = cell.get_error();
+			mapFile << std::to_string(errorInfo->linearError) + "|" + std::to_string(errorInfo->angularError) + ";";
+		}
+		mapFile << "\n";
+	}
+	mapFile.close();
 }
 
 /**
@@ -83,15 +105,13 @@ int main(int argc, char **argv)
 	// initialize the services and topics
 	ros::ServiceServer errorInsertServer = n.advertiseService("insert_error", insert_error);
 	ros::ServiceServer getErrorServer = n.advertiseService("get_point_error", get_point_error);
-	ros::spin();
-
 	ros::Rate loop_rate(10);
-
 	// publish
 	while(ros::ok()){
 		publish_error_map();
 		loop_rate.sleep();
 	}
+	shutdownHandler();
 
 	return 0;
 }

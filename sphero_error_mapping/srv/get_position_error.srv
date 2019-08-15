@@ -1,8 +1,8 @@
 Header header
-geometry_msgs/Point point
+geometry_msgs/Pose2D pose
 int32 max_age
 ---
 uint32 age
 uint8 quality
-int32 linearError
-int32 angularError
+float32 linearError
+float32 angularError
