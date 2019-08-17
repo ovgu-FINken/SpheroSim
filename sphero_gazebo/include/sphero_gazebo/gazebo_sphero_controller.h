@@ -18,10 +18,15 @@
 
 #include <map>
 
+#include <cmath>
+
 // Gazebo
 #include <gazebo/common/common.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo_plugins/gazebo_ros_utils.h>
+
+//Eigen
+#include <Eigen/Dense>
 
 // ROS
 #include <ros/ros.h>
@@ -32,6 +37,8 @@
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
 
+#include "sphero_error_mapping/error_insert.h"
+
 // Custom Callback Queue
 #include <ros/callback_queue.h>
 #include <ros/advertise_options.h>
@@ -39,6 +46,8 @@
 // Boost
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
+
+using namespace sphero_error_mapping;
 
 namespace gazebo {
 
@@ -63,14 +72,16 @@ namespace gazebo {
       virtual void FiniChild();
 
     private:
-      void publishOdometry(double step_time);
-      void publishPosition();
+      void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& cmd_msg);
       void getWheelVelocities();
+      void publishDiff();
+      void publishOdometry();
+      void publishPosition();
       void publishWheelTF(); /// publishes the wheel tf's
       void publishWheelJointState();
+      void QueueThread();
       void UpdateOdometryEncoder();
       double getErrorFactor(double limit);
-
 
       GazeboRosPtr gazebo_ros_;
       physics::ModelPtr parent;
@@ -91,12 +102,15 @@ namespace gazebo {
       // ROS STUFF
       ros::Publisher odometry_publisher_;
       ros::Publisher position_publisher_;
+      ros::Publisher joint_state_publisher_;
       ros::Subscriber cmd_vel_subscriber_;
+      ros::ServiceClient errorClient_;
+      ros::ServiceClient reportClient_;
       boost::shared_ptr<tf::TransformBroadcaster> transform_broadcaster_;
       sensor_msgs::JointState joint_state_;
-      ros::Publisher joint_state_publisher_;
       nav_msgs::Odometry odom_;
       geometry_msgs::Pose2D pose_;
+      geometry_msgs::Pose2D last_pose_;
       std::string tf_prefix_;
 
       boost::mutex lock;
@@ -111,10 +125,6 @@ namespace gazebo {
       // Custom Callback Queue
       ros::CallbackQueue queue_;
       boost::thread callback_queue_thread_;
-      void QueueThread();
-
-      // DiffDrive stuff
-      void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& cmd_msg);
 
       double x_;
       double rot_;
@@ -129,9 +139,9 @@ namespace gazebo {
       geometry_msgs::Pose2D pose_encoder_;
       common::Time last_odom_update_;
 
-    // Flags
-    bool publishWheelTF_;
-    bool publishWheelJointState_;
+      // Flags
+      bool publishWheelTF_;
+      bool publishWheelJointState_;
 
   };
 

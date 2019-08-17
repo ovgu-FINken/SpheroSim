@@ -1,0 +1,8 @@
+Header header
+geometry_msgs/Pose2D pose
+int32 max_age
+---
+uint32 age
+uint8 quality
+float32 linearError
+float32 angularError

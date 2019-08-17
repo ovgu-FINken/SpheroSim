@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(sphero_gazebo)
 
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin package
@@ -12,6 +15,8 @@ find_package(catkin REQUIRED COMPONENTS
   gazebo_ros
   robot_controllers
   robot_controllers_interface
+  sphero_error_inject
+  sphero_error_mapping
 )
 
 ## System dependencies are found with CMake's conventions
@@ -104,18 +109,19 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-INCLUDE_DIRS include
+  INCLUDE_DIRS
+    include
   CATKIN_DEPENDS
     control_toolbox
     gazebo_ros
-#    gazebo_plugins
+    #gazebo_plugins
     robot_controllers
     robot_controllers_interface
   DEPENDS
     gazebo
     SDF
   LIBRARIES
-	gazebo_sphero_controller
+	  gazebo_sphero_controller
 )
 
 ###########
@@ -138,8 +144,8 @@ link_directories(
 )
 
 ## Declare a C++ library
- add_library(gazebo_sphero_controller src/gazebo_sphero_controller.cpp
- )
+add_library(gazebo_sphero_controller src/gazebo_sphero_controller.cpp)
+
 target_link_libraries(gazebo_sphero_controller gazebo_ros_utils ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 ## Add cmake target dependencies of the library

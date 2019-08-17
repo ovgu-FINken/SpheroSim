@@ -1,21 +1,21 @@
 #ifndef SPHEROSIM_ERRORMAP
 #define SPHEROSIM_ERRORMAP
-#include <sphero_error_inject/error.h>
+#include <sphero_error_inject/error_cell.h>
+#include <geometry_msgs/Pose2D.h>
 
 namespace spheroSim {
 	class ErrorMap {
 		public:
 			static ErrorMap* getInstance();
-			Error GetPositionError(geometryMsg::Pose2D pose);
+			ErrorCell GetPositionError(geometry_msgs::Pose2D pose);
 			// explicitly delete copy-constructor and copy-assignment
 			ErrorMap(const ErrorMap&) = delete;
 			ErrorMap& operator=(const ErrorMap&) = delete;
 		private:
-			Error* map;
+			ErrorCell* map;
 			static ErrorMap* instance;
 			ErrorMap();
-			ErrorMap(string csvPath, boolean header);
-	}
+	};
 }
 
 #endif
