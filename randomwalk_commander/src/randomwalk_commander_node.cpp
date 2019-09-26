@@ -11,10 +11,20 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 
 void randomwalk(MoveBaseClient &client) {
   move_base_msgs::MoveBaseGoal goal;
+  goal.target_pose.header.stamp = ros::Time::now();
   goal.target_pose.header.frame_id = "map";
+  double x = 0.0;
+  double y = 0.0;
+  random_device rd;  //Will be used to obtain a seed for the random number engine
+  mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+  uniform_real_distribution<double> unif_x(0,40);
+  uniform_real_distribution<double> unif_y(0,30);
   while(ros::ok()) {
-	goal.target_pose.pose.position.x = 3.5;
-	goal.target_pose.pose.position.y = 2;
+	x = unif_x(gen);
+	y = unif_y(gen);
+	goal.target_pose.pose.position.x = x;
+	goal.target_pose.pose.position.y = y;
+	goal.target_pose.pose.orientation.w = 1;
 	client.sendGoal(goal);
 	client.waitForResult();
   }
@@ -32,20 +42,15 @@ int main(int argc, char **argv) {
 	// read the parameter for the number of robots to send around randomly
 	int index;
 	if(ros::param::get("~index", index)) {
-		ROS_INFO("Retrieved index %d.", index);
+		ROS_INFO("Randomwalk: Retrieved index %d.", index);
 	} else {
-		ROS_ERROR("Could not retrieve index!");
+		ROS_ERROR("Randomwalk: Could not retrieve index!");
 	}
-	std::stringstream topicNameStream;
-	topicNameStream << "/sphero";
-	topicNameStream << index;
-	topicNameStream << "/move_base/goal";
-	string topicName = topicNameStream.str();
-	ROS_INFO("Build topic name %s", topicName.c_str());
+	string topicName = "/sphero" + to_string(index) + "/move_base";
 	MoveBaseClient client(topicName, true);
 	// wait for the move_base servers to come up for all robots
-	while(!client.waitForServer(ros::Duration(10.0))){
-		ROS_INFO("Wating for move_bases to be ready");
+	while(!client.waitForServer(ros::Duration(2.0))){
+		ROS_INFO("Wating for move_base to be ready");
 	}
 
 	randomwalk(client);
