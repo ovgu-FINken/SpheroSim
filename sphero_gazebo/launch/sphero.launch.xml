@@ -16,8 +16,8 @@
   </node>
 
   <!-- random movement command issuer -->
-  <node name="random_commander" pkg="randomwalk_commander" respawn="false" type="randomwalk_commander_node">
-    <param name="index" value="$(arg index)" />
+  <node name="random_commander" pkg="randomwalk_commander" respawn="false" type="randomwalk_commander_node"> <!--launch-prefix="gdbserver localhost:909$(arg index)" >-->
+    <param type="int" name="index" value="$(arg index)" />
   </node>
 
   <!-- ROS navigation planners are parameterized to allow for external configuration -->
