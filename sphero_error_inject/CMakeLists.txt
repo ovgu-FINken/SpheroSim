@@ -117,7 +117,7 @@ include_directories(
 )
 
 link_directories(
-  /opt/ros/kinetic/lib
+  /opt/ros/melodic/lib
 )
 
 ## Declare a C++ library

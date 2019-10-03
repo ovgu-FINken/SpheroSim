@@ -1,5 +1,6 @@
 #include <sphero_error_inject/error_map.h>
 
+#include <random>
 #include <iostream>
 #include <fstream>
 
