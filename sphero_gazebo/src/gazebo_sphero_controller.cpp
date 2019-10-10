@@ -299,7 +299,7 @@ void GazeboSpheroController::getWheelVelocities()
 void GazeboSpheroController::cmdVelCallback ( const geometry_msgs::Twist::ConstPtr& cmd_msg )
 {
     boost::mutex::scoped_lock scoped_lock(lock);
-    ROS_INFO("%s: cmd_vel - linar.x: %g  \t| angular.z: %g", gazebo_ros_->info(), cmd_msg->linear.x, cmd_msg->angular.z);
+    //ROS_INFO("%s: cmd_vel - linar.x: %g  \t| angular.z: %g", gazebo_ros_->info(), cmd_msg->linear.x, cmd_msg->angular.z);
     x_ = cmd_msg->linear.x;
     rot_ = cmd_msg->angular.z;
 }

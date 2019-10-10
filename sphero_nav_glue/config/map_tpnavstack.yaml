@@ -1,4 +1,4 @@
-image: map_tpnavstack_big.pgm
+image: map_tpnavstack.pgm
 resolution: 0.01
 origin: [0.0, 0.0, 0.0]
 occupied_thresh: 0.65

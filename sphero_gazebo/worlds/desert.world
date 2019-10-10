@@ -90,15 +90,15 @@
       </link>
     </model>
     <model name='Wall_0'>
-      <pose frame=''>15 0 0 0 0 0</pose>
+      <pose frame=''>1.5 0 0.5 0 0 0</pose>
       <link name='Wall_0'>
         <collision name='Wall_0_Collision'>
           <geometry>
             <box>
-              <size>30 0.15 2.5</size>
+              <size>3 0.15 1</size>
             </box>
           </geometry>
-          <pose frame=''>0 0 1.25 0 0 0</pose>
+          <pose frame=''>0 0 0 0 0 0</pose>
           <max_contacts>10</max_contacts>
           <surface>
             <contact>
@@ -114,10 +114,10 @@
           </surface>
         </collision>
         <visual name='Wall_0_Visual'>
-          <pose frame=''>0 0 1.25 0 0 0</pose>
+          <pose frame=''>0 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>30 0.15 2.5</size>
+              <size>3 0.15 1</size>
             </box>
           </geometry>
           <material>
@@ -128,7 +128,7 @@
             <ambient>1 1 1 1</ambient>
           </material>
         </visual>
-        <pose frame=''>0 -0.675 0 0 -0 0</pose>
+        <pose frame=''>0 0 0 0 0 0</pose>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
         <gravity>1</gravity>
@@ -136,15 +136,15 @@
       <static>1</static>
     </model>
     <model name='Wall_1'>
-      <pose frame=''>0 20 0 0 0 0</pose>
+      <pose frame=''>0 2 0.5 0 0 0</pose>
       <link name='Wall_1'>
         <collision name='Wall_1_Collision'>
           <geometry>
             <box>
-              <size>0.15 40 2.5</size>
+              <size>0.15 4 1</size>
             </box>
           </geometry>
-          <pose frame=''>0 0 1.25 0 0 0</pose>
+          <pose frame=''>0 0 0 0 0 0</pose>
           <max_contacts>10</max_contacts>
           <surface>
             <contact>
@@ -160,10 +160,10 @@
           </surface>
         </collision>
         <visual name='Wall_1_Visual'>
-          <pose frame=''>0 0 1.25 0 0 0</pose>
+          <pose frame=''>0 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.15 40 2.5</size>
+              <size>0.15 4 1</size>
             </box>
           </geometry>
           <material>
@@ -174,7 +174,7 @@
             <ambient>1 1 1 1</ambient>
           </material>
         </visual>
-        <pose frame=''>0 -0.675 0 0 -0 0</pose>
+        <pose frame=''>0 0 0 0 0 0</pose>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
         <gravity>1</gravity>
@@ -182,15 +182,15 @@
       <static>1</static>
     </model>
     <model name='Wall_2'>
-      <pose frame=''>30 20 0 0 0 0</pose>
+      <pose frame=''>3 2 0.5 0 0 0</pose>
       <link name='Wall_2'>
         <collision name='Wall_2_Collision'>
           <geometry>
             <box>
-              <size>0.15 40 2.5</size>
+              <size>0.15 4 1</size>
             </box>
           </geometry>
-          <pose frame=''>0 0 1.25 0 0 0</pose>
+          <pose frame=''>0 0 0 0 0 0</pose>
           <max_contacts>10</max_contacts>
           <surface>
             <contact>
@@ -206,10 +206,10 @@
           </surface>
         </collision>
         <visual name='Wall_2_Visual'>
-          <pose frame=''>0 0 1.25 0 0 0</pose>
+          <pose frame=''>0 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.15 40 2.5</size>
+              <size>0.15 4 1</size>
             </box>
           </geometry>
           <material>
@@ -220,7 +220,7 @@
             <ambient>1 1 1 1</ambient>
           </material>
         </visual>
-        <pose frame=''>0 -0.675 0 0 -0 0</pose>
+        <pose frame=''>0 0 0 0 0 0</pose>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
         <gravity>1</gravity>
@@ -228,15 +228,15 @@
       <static>1</static>
     </model>
     <model name='Wall_3'>
-      <pose frame=''>15 40 0 0 0 0</pose>
+      <pose frame=''>1.5 4 0.5 0 0 0</pose>
       <link name='Wall_3'>
         <collision name='Wall_3_Collision'>
           <geometry>
             <box>
-              <size>30 0.15 2.5</size>
+              <size>3 0.15 1</size>
             </box>
           </geometry>
-          <pose frame=''>0 0 1.25 0 0 0</pose>
+          <pose frame=''>0 0 0 0 0 0</pose>
           <max_contacts>10</max_contacts>
           <surface>
             <contact>
@@ -252,10 +252,10 @@
           </surface>
         </collision>
         <visual name='Wall_3_Visual'>
-          <pose frame=''>0 0 1.25 0 0 0</pose>
+          <pose frame=''>0 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>30 0.15 2.5</size>
+              <size>3 0.15 1</size>
             </box>
           </geometry>
           <material>
@@ -266,7 +266,7 @@
             <ambient>1 1 1 1</ambient>
           </material>
         </visual>
-        <pose frame=''>0 -0.675 0 0 -0 0</pose>
+        <pose frame=''>0 0 0 0 0 0</pose>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
         <gravity>1</gravity>
