@@ -109,6 +109,7 @@ namespace gazebo {
       boost::shared_ptr<tf::TransformBroadcaster> transform_broadcaster_;
       sensor_msgs::JointState joint_state_;
       nav_msgs::Odometry odom_;
+      nav_msgs::Odometry last_odom_;
       geometry_msgs::Pose2D pose_;
       geometry_msgs::Pose2D last_pose_;
       std::string tf_prefix_;

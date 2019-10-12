@@ -14,8 +14,9 @@
 
 using namespace sphero_error_mapping;
 
-const int MAPSIZE_HORIZONTAL = 800;
-const int MAPSIZE_VERTICAL = 600;
+const int SCALE_FACTOR = 20;
+const int MAPSIZE_HORIZONTAL = 3 * SCALE_FACTOR;
+const int MAPSIZE_VERTICAL = 4 * SCALE_FACTOR;
 
 std::vector<ErrorCell> map;
 
@@ -24,17 +25,18 @@ std::vector<ErrorCell> map;
  */
 bool insert_error(error_insert::Request &request, error_insert::Response &response)
 {
-    int request_x = request.pose.x;
-    int request_y = request.pose.y;
+	// scale and round the reported position
+    int request_x = (int) (request.pose.x * SCALE_FACTOR) + 0.5;
+    int request_y = (int) (request.pose.y * SCALE_FACTOR) + 0.5;
     // find the correct cell in the map to update
     int cellIndex = (MAPSIZE_HORIZONTAL * request_y) + (request_x % MAPSIZE_HORIZONTAL);
     ErrorCell insertCell = map[cellIndex];
     // define the data for the update
     ErrorInformation* report = new ErrorInformation();
-    report->age = ros::Time::now().toSec();
     report->linearError = request.linearError;
     report->angularError = request.angularError;
     insertCell.insert_report(report);
+	map[cellIndex] = insertCell;
     return true;
 }
 
@@ -48,37 +50,32 @@ bool get_point_error(get_position_error::Request &request, get_position_error::R
     int cellIndex = (MAPSIZE_HORIZONTAL * request_y) + (request_x % MAPSIZE_HORIZONTAL);
     ErrorCell requestCell = map[cellIndex];
     ErrorInformation *errorInfo = requestCell.get_error();
-    response.age = errorInfo->age;
-    response.quality = errorInfo->quality;
     response.linearError = errorInfo->linearError;
     response.angularError = errorInfo->angularError;
     return true;
 }
 
-/**
- * Publisher method for the complete error map.
- */
-void publish_error_map()
-{
-
-}
-
-void shutdownHandler() {
+void logMap(const ros::TimerEvent& event) {
 	// write the created map out to a file for evaluation
 	time_t t = std::time(0);
 	long int now = static_cast<long int> (t);
-	std::ofstream mapFile;
-	mapFile.open("/home/stephan/spheroSim/sphero_error_map_" + std::to_string(now) + ".csv");
+	std::ofstream linearFile;
+	std::ofstream angularFile;
+	linearFile.open("/home/stephan/spheroSim/sphero_error_map_" + std::to_string(now) + "_linear.csv");
+	angularFile.open("/home/stephan/spheroSim/sphero_error_map_" + std::to_string(now) + "_angular.csv");
 	for(int y = 0; y < MAPSIZE_VERTICAL; ++y) {
 		for(int x = 0; x < MAPSIZE_HORIZONTAL; ++x) {
 			int cellIndex = (y * MAPSIZE_HORIZONTAL) + x;
 			ErrorCell cell = map[cellIndex];
     		ErrorInformation *errorInfo = cell.get_error();
-			mapFile << std::to_string(errorInfo->linearError) + "|" + std::to_string(errorInfo->angularError) + ";";
+			linearFile << std::to_string(errorInfo->linearError) + "(" + std::to_string(errorInfo->linearCovariance) + ");";
+			angularFile << std::to_string(errorInfo->angularError) + "(" + std::to_string(errorInfo->angularCovariance) + ");";
 		}
-		mapFile << "\n";
+		linearFile << "\n";
+		angularFile << "\n";
 	}
-	mapFile.close();
+	linearFile.close();
+	angularFile.close();
 }
 
 /**
@@ -104,14 +101,9 @@ int main(int argc, char **argv)
 
 	// initialize the services and topics
 	ros::ServiceServer errorInsertServer = n.advertiseService("insert_error", insert_error);
-	ros::ServiceServer getErrorServer = n.advertiseService("get_point_error", get_point_error);
-	ros::Rate loop_rate(10);
-	// publish
-	while(ros::ok()){
-		publish_error_map();
-		loop_rate.sleep();
-	}
-	shutdownHandler();
+	// log the map every minute
+	ros::Timer timer = n.createTimer(ros::Duration(60), logMap);
+	ros::spin();
 
 	return 0;
 }

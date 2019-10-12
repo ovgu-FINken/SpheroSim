@@ -116,7 +116,7 @@ void GazeboSpheroController::Load(physics::ModelPtr _parent, sdf::ElementPtr _sd
     cmd_vel_subscriber_ = gazebo_ros_->node()->subscribe(so);
     ROS_INFO("%s: Subscribe to %s!", gazebo_ros_->info(), command_topic_.c_str());
 
-    reportClient_ = gazebo_ros_->node()->serviceClient<sphero_error_mapping::error_insert>("/sphero_error_mapping/insert_error");
+    reportClient_ = gazebo_ros_->node()->serviceClient<sphero_error_mapping::error_insert>("/insert_error");
 
     if (this->publish_tf_)
     {
@@ -127,7 +127,7 @@ void GazeboSpheroController::Load(physics::ModelPtr _parent, sdf::ElementPtr _sd
       ROS_INFO("%s: Advertise position on %s !", gazebo_ros_->info(), position_topic_.c_str());
     }
 
-    errorClient_ = gazebo_ros_->node()->serviceClient<sphero_error_inject::error>("get_position_error");
+    errorClient_ = gazebo_ros_->node()->serviceClient<sphero_error_inject::error>("/get_position_error");
 
     // start custom queue for diff drive
     this->callback_queue_thread_ = boost::thread(boost::bind(&GazeboSpheroController::QueueThread, this));
@@ -251,6 +251,8 @@ void GazeboSpheroController::UpdateChild()
             joints_[RIGHT]->SetParam("vel", 0,wheel_speed_instr_[RIGHT] / (wheel_diameter_ / 2.0));
         }
 
+        // save intermediate for internal tracking
+        last_odom_ = odom_;
         last_update_time_+= common::Time(update_period_);
     }
 }
@@ -286,9 +288,12 @@ void GazeboSpheroController::getWheelVelocities()
     double angularFactor = getErrorFactor(angularLimit);
     sphero_error_inject::error errorService;
     errorService.request.pose = pose_;
-    errorClient_.call(errorService);
-    linearFactor += errorService.response.linearError;
-    angularFactor += errorService.response.angularError;
+    if(errorClient_.call(errorService)){
+        linearFactor += errorService.response.linearError;
+        angularFactor += errorService.response.angularError;
+    } else {
+        ROS_ERROR("%s: failed to call error inject.", gazebo_ros_->info());
+    }
     double vr = x_ * linearFactor;
     double va = rot_ * angularFactor;
     // hand the movement command over to gazebo
@@ -378,12 +383,17 @@ void GazeboSpheroController::UpdateOdometryEncoder()
 void GazeboSpheroController::publishDiff() {
 
     double distance = sqrt(pow(last_pose_.x - pose_.x, 2) + pow(last_pose_.y - pose_.y, 2));
-    double planned_distance = sqrt(pow(last_pose_.x - odom_.pose.pose.position.x, 2) + pow(last_pose_.y - odom_.pose.pose.position.y, 2));
+    double planned_distance = sqrt(pow(last_pose_.x - last_odom_.pose.pose.position.x, 2) + pow(last_pose_.y - last_odom_.pose.pose.position.y, 2));
+    if(distance == 0 || planned_distance == 0) {
+        // no movement happened, nothing to report
+        return;
+    }
+    // ROS_INFO("%s: calculated distance %g and planned distance %g", gazebo_ros_->info(), distance, planned_distance);
     double relative_distance_diff = abs((distance / planned_distance) - 1);
 
     // the incoming geometry_msgs::Quaternion is transformed to a tf::Quaterion
     tf::Quaternion quat;
-    tf::quaternionMsgToTF(odom_.pose.pose.orientation, quat);
+    tf::quaternionMsgToTF(last_odom_.pose.pose.orientation, quat);
 
     // the tf::Quaternion has a method to acess roll pitch and yaw
     double roll, pitch, yaw;
@@ -399,7 +409,9 @@ void GazeboSpheroController::publishDiff() {
     mappingService.request.linearError = relative_distance_diff;
     mappingService.request.angularError = relative_theta_diff;
     mappingService.request.robotId = '0';
-    reportClient_.call(mappingService);
+    if(!reportClient_.call(mappingService)){
+        ROS_ERROR("%s: failed to call report service.", gazebo_ros_->info());
+    }
 }
 
 void GazeboSpheroController::publishPosition()

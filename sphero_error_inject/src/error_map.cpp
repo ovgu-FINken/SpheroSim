@@ -19,8 +19,8 @@ namespace spheroSim {
 	// default constructor
 	ErrorMap::ErrorMap() {
 		// The size of the map, must match the file fed into the navStack
-		const int xSize = 800;
-		const int ySize = 600;
+		const int xSize = 60;
+		const int ySize = 80;
 		// TODO: make this configurable
 		const int numSpikes = 10;
 		// initialize the map
@@ -41,8 +41,10 @@ namespace spheroSim {
 		// write the created map out to a file for later comparison
 	    time_t t = std::time(0);
     	long int now = static_cast<long int> (t);
-		std::ofstream mapFile;
-		mapFile.open("/home/stephan/spheroSim/sphero_map_" + std::to_string(now) + ".csv");
+		std::ofstream linearFile;
+		std::ofstream angularFile;
+		linearFile.open("/home/stephan/spheroSim/sphero_error_init_" + std::to_string(now) + "_linear.csv");
+		angularFile.open("/home/stephan/spheroSim/sphero_error_init_" + std::to_string(now) + "_angular.csv");
 		// iterate over the map and calculate each cell's error by it's distances to all spikes
 		for (int y = 0; y < ySize; ++y) {
 			for (int x = 0; x < xSize; ++x) {
@@ -58,18 +60,21 @@ namespace spheroSim {
 					angularError += 1/distance;
 				}
 				map[x * y] = ErrorCell(linearError, angularError);
-				mapFile << std::to_string(linearError) + "|" + std::to_string(angularError) + ";";
+				linearFile << std::to_string(linearError) + ";";
+				angularFile << std::to_string(angularError) + ";";
 			}
-			mapFile << "\n";
+			linearFile << "\n";
+			angularFile << "\n";
 		}
-		mapFile.close();
+		linearFile.close();
+		angularFile.close();
 	}
 
 	ErrorCell ErrorMap::GetPositionError(geometry_msgs::Pose2D pose) {
 		// The size of the map, must match the file fed into the navStack
-		const int xSize = 800;
-		const int ySize = 600;
-		const int index = (xSize * pose.y) + pose.x;
+		const int xSize = 60;
+		const int ySize = 80;
+		const int index = (xSize * (pose.y * 20)) + (pose.x * 20);
 		if(index > (xSize * ySize)) {
 			//TODO: Error, out of bounds
 			ROS_ERROR("Error injection for requested pose is out of bounds!");

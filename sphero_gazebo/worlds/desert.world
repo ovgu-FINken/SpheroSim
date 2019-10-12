@@ -26,7 +26,7 @@
 
     <gui fullscreen="0">
       <camera name="user_camera">
-        <pose>42 20 40 0 1 3.141</pose>
+        <pose>1.5 2 10 0 1.57 3.141</pose>
         <view_controller>orbit</view_controller>
       </camera>
     </gui>
@@ -45,7 +45,7 @@
       </model>
     </state>
     <model name="ground_plane">
-      <pose frame=''>0 0 0.001 0 0 0</pose>
+      <pose frame=''>-1 -1 0.001 0 0 0</pose>
       <static>1</static>
       <link name="link">
         <collision name="collision">
