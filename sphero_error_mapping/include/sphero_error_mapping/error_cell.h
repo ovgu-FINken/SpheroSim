@@ -30,7 +30,7 @@ namespace sphero_error_mapping {
 			KalmanParams angularEstimate;
 
 		public:
-			ErrorCell(int x, int y): x(x), y(y), linearEstimate(1, 2, 0.1e-5, 0.2), angularEstimate(1, 2, 0.1e-5, 0.2) {};
+			ErrorCell(int x, int y): x(x), y(y), linearEstimate(0, 5, 0.5, 0.5), angularEstimate(0, 5, 0.5, 0.5) {};
 			
 			/// The position of the cell on the map in x dimension
 			int x;

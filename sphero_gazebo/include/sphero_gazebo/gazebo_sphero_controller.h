@@ -47,6 +47,8 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
+#include <sphero_gazebo/kalman_params.h>
+
 using namespace sphero_error_mapping;
 
 namespace gazebo {
@@ -81,7 +83,8 @@ namespace gazebo {
       void publishWheelJointState();
       void QueueThread();
       void UpdateOdometryEncoder();
-      double getErrorFactor(double limit);
+      void report_error(const ros::TimerEvent& event);
+      void update_estimate(KalmanParams *estimate, double measurement);
 
       GazeboRosPtr gazebo_ros_;
       physics::ModelPtr parent;
@@ -96,6 +99,8 @@ namespace gazebo {
 
       double current_linear_error_;
       double current_angular_error_;
+      KalmanParams linear_estimate_;
+      KalmanParams angular_estimate_;
 
       std::vector<physics::JointPtr> joints_;
 

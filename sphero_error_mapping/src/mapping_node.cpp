@@ -14,7 +14,7 @@
 
 using namespace sphero_error_mapping;
 
-const int SCALE_FACTOR = 10;
+const int SCALE_FACTOR = 5;
 const int MAPSIZE_HORIZONTAL = 3 * SCALE_FACTOR;
 const int MAPSIZE_VERTICAL = 4 * SCALE_FACTOR;
 
@@ -68,8 +68,12 @@ void logMap(const ros::TimerEvent& event) {
 			int cellIndex = (y * MAPSIZE_HORIZONTAL) + x;
 			ErrorCell cell = map[cellIndex];
     		ErrorInformation *errorInfo = cell.get_error();
-			linearFile << std::to_string(errorInfo->linearError) + "(" + std::to_string(errorInfo->linearCovariance) + ");";
-			angularFile << std::to_string(errorInfo->angularError) + "(" + std::to_string(errorInfo->angularCovariance) + ");";
+			linearFile << std::to_string(errorInfo->linearError) + "(" + std::to_string(errorInfo->linearCovariance) + ")";
+			angularFile << std::to_string(errorInfo->angularError) + "(" + std::to_string(errorInfo->angularCovariance) + ")";
+			if(x<MAPSIZE_HORIZONTAL - 1){
+				linearFile << ";";
+				angularFile << ";";
+			}
 		}
 		linearFile << "\n";
 		angularFile << "\n";

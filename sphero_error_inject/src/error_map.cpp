@@ -8,7 +8,7 @@
 
 namespace spheroSim {
 
-	const int SCALE_FACTOR = 10;
+	const int SCALE_FACTOR = 5;
 	const int MAPSIZE_HORIZONTAL = 3 * SCALE_FACTOR;
 	const int MAPSIZE_VERTICAL = 4 * SCALE_FACTOR;
 
@@ -24,13 +24,13 @@ namespace spheroSim {
 	// default constructor
 	ErrorMap::ErrorMap() {
 		// TODO: make this configurable
-		const int numSpikes = 10;
+		const int numSpikes = 5;
 		// initialize the map
 		ErrorCell map[MAPSIZE_HORIZONTAL * MAPSIZE_VERTICAL];
 		// randomly generate positions for "Distotion-Spikes"
 	    std::uniform_real_distribution<float> unifX(0, MAPSIZE_HORIZONTAL-1);
 	    std::uniform_real_distribution<float> unifY(0, MAPSIZE_VERTICAL-1);
-	    std::default_random_engine re;
+	    std::default_random_engine re(time(NULL));
 	    geometry_msgs::Pose2D errorPositions[numSpikes];
 	    for (int i = 0; i < numSpikes; ++i)
 	    {
@@ -50,19 +50,28 @@ namespace spheroSim {
 		for (int y = 0; y < MAPSIZE_VERTICAL; ++y) {
 			for (int x = 0; x < MAPSIZE_HORIZONTAL; ++x) {
 				// get the distance to the spikes
-				float linearError = 0;
-				float angularError = 0;
+				double linearError = 0;
+				double angularError = 0;
 				for (int s = 0; s < numSpikes; ++s)
 				{
 					geometry_msgs::Pose2D spike = errorPositions[s];
 					double distance = sqrt(pow(spike.x - x, 2) + pow(spike.y - y, 2));
 					// error is the inverted distance, so a bigger distance results in a smaller error.
-					linearError += 1/distance;
-					angularError += 1/distance;
+					if(distance == 0){
+						linearError += 1.0;
+						angularError += 1.0;
+					} else if(distance < 5){
+						linearError += 1.0/distance;
+						angularError += 1.0/distance;
+					}
 				}
 				map[x * y] = ErrorCell(linearError, angularError);
-				linearFile << std::to_string(linearError) + ";";
-				angularFile << std::to_string(angularError) + ";";
+				linearFile << std::to_string(linearError);
+				angularFile << std::to_string(angularError);
+				if(x<MAPSIZE_HORIZONTAL - 1){
+					linearFile << ";";
+					angularFile << ";";
+				}
 			}
 			linearFile << "\n";
 			angularFile << "\n";
@@ -76,7 +85,7 @@ namespace spheroSim {
 		const int index = (MAPSIZE_HORIZONTAL * (pose.y * SCALE_FACTOR)) + (pose.x * SCALE_FACTOR);
 		if(index > (MAPSIZE_HORIZONTAL * MAPSIZE_VERTICAL)) {
 			//TODO: Error, out of bounds
-			ROS_ERROR("Error injection for requested pose is out of bounds!");
+			ROS_ERROR("Error injection for requested pose (%g, %g) is out of bounds!", pose.x, pose.y);
 		}
 		return map[index];
 	}

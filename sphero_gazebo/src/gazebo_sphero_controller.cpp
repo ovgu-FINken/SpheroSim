@@ -26,8 +26,6 @@
 #include <ignition/math.hh>
 #include <sdf/sdf.hh>
 
-#include <ros/ros.h>
-
 using namespace sphero_error_mapping;
 using namespace sphero_error_inject;
 using namespace std;
@@ -41,7 +39,7 @@ enum {
     LEFT,
 };
 
-GazeboSpheroController::GazeboSpheroController() {}
+GazeboSpheroController::GazeboSpheroController(): linear_estimate_(0, 5, 0.5, 0.5), angular_estimate_(0, 5, 0.5, 0.5) {}
 
 // Destructor
 GazeboSpheroController::~GazeboSpheroController() {}
@@ -99,6 +97,15 @@ void GazeboSpheroController::Load(physics::ModelPtr _parent, sdf::ElementPtr _sd
     rot_ = 0;
     alive_ = true;
 
+    double limit = 0.02;
+    uniform_real_distribution<double> unif(0,limit);
+    default_random_engine re(time(NULL));
+    
+    current_linear_error_ = 1 - unif(re);
+    current_angular_error_ = 1 - unif(re);
+    ROS_INFO("%s: initialized inherent error: %g\t%g", gazebo_ros_->info(), current_linear_error_, current_linear_error_);
+    gazebo_ros_->node()->createTimer(ros::Duration(60), boost::bind(&GazeboSpheroController::report_error, this, _1));
+
     if (this->publishWheelJointState_)
     {
         joint_state_publisher_ = gazebo_ros_->node()->advertise<sensor_msgs::JointState>("joint_states", 1000);
@@ -135,6 +142,10 @@ void GazeboSpheroController::Load(physics::ModelPtr _parent, sdf::ElementPtr _sd
 
     // listen to the update event (broadcast every simulation iteration)
     this->update_connection_ = event::Events::ConnectWorldUpdateBegin ( boost::bind ( &GazeboSpheroController::UpdateChild, this ) );
+}
+
+void GazeboSpheroController::report_error(const ros::TimerEvent& event){
+    ROS_INFO("%s: inherent error (%g\t%g)", gazebo_ros_->info(), this->linear_estimate_.X, this->angular_estimate_.X);
 }
 
 void GazeboSpheroController::Reset()
@@ -220,6 +231,8 @@ void GazeboSpheroController::UpdateChild()
             publishOdometry();
             publishPosition();
             publishDiff();
+            // save intermediate for internal tracking
+            last_odom_ = odom_;
         }
         if (publishWheelTF_) {
             publishWheelTF();
@@ -251,8 +264,6 @@ void GazeboSpheroController::UpdateChild()
             joints_[RIGHT]->SetParam("vel", 0,wheel_speed_instr_[RIGHT] / (wheel_diameter_ / 2.0));
         }
 
-        // save intermediate for internal tracking
-        last_odom_ = odom_;
         last_update_time_+= common::Time(update_period_);
     }
 }
@@ -267,30 +278,22 @@ void GazeboSpheroController::FiniChild()
     callback_queue_thread_.join();
 }
 
-// calculates the factor to apply to a movement command to inject a random error
-double GazeboSpheroController::getErrorFactor(double limit)
-{
-    double lower_bound = limit * -1;
-    uniform_real_distribution<double> unif(lower_bound,limit);
-    default_random_engine re;
-    double random = unif(re);
-    return 1 + random;
-}
-
 void GazeboSpheroController::getWheelVelocities()
 {
     boost::mutex::scoped_lock scoped_lock ( lock );
-    // TODO: retrieve error from current position --> errorMap-Service
+    double linearFactor = current_linear_error_;
+    double angularFactor = current_angular_error_;
     // inject a random error into the next movement instruction
-    double linearLimit = 0.01;
-    double angularLimit = 0.01;
-    double linearFactor = getErrorFactor(linearLimit);
-    double angularFactor = getErrorFactor(angularLimit);
     sphero_error_inject::error errorService;
     errorService.request.pose = pose_;
     if(errorClient_.call(errorService)){
-        linearFactor += errorService.response.linearError;
-        angularFactor += errorService.response.angularError;
+        double linearError = errorService.response.linearError;
+        double angularError = errorService.response.angularError;
+        linearFactor -= linearError;
+        angularFactor -= angularError;
+        if(linearFactor < 0 || angularFactor < 0){
+            ROS_WARN("%s: negative:\t%g(%g)\t%g(%g)", gazebo_ros_->info(), linearFactor, linearError, angularFactor, angularError);
+        }
     } else {
         ROS_ERROR("%s: failed to call error inject.", gazebo_ros_->info());
     }
@@ -304,7 +307,6 @@ void GazeboSpheroController::getWheelVelocities()
 void GazeboSpheroController::cmdVelCallback ( const geometry_msgs::Twist::ConstPtr& cmd_msg )
 {
     boost::mutex::scoped_lock scoped_lock(lock);
-    //ROS_INFO("%s: cmd_vel - linar.x: %g  \t| angular.z: %g", gazebo_ros_->info(), cmd_msg->linear.x, cmd_msg->angular.z);
     x_ = cmd_msg->linear.x;
     rot_ = cmd_msg->angular.z;
 }
@@ -384,13 +386,12 @@ void GazeboSpheroController::publishDiff() {
 
     double distance = sqrt(pow(last_pose_.x - pose_.x, 2) + pow(last_pose_.y - pose_.y, 2));
     double planned_distance = sqrt(pow(last_pose_.x - last_odom_.pose.pose.position.x, 2) + pow(last_pose_.y - last_odom_.pose.pose.position.y, 2));
-    if(distance == 0 || planned_distance == 0) {
-        // no movement happened, nothing to report
-        return;
+    double relative_distance_diff = 0;
+    if(distance != 0 && planned_distance != 0) {
+        // ROS_INFO("%s: calculated distance %g and planned distance %g", gazebo_ros_->info(), distance, planned_distance);
+        relative_distance_diff = abs((distance / planned_distance) - 1);
     }
-    // ROS_INFO("%s: calculated distance %g and planned distance %g", gazebo_ros_->info(), distance, planned_distance);
-    double relative_distance_diff = abs((distance / planned_distance) - 1);
-
+    
     // the incoming geometry_msgs::Quaternion is transformed to a tf::Quaterion
     tf::Quaternion quat;
     tf::quaternionMsgToTF(last_odom_.pose.pose.orientation, quat);
@@ -401,13 +402,27 @@ void GazeboSpheroController::publishDiff() {
 
     double theta_diff = abs(last_pose_.theta - pose_.theta);
     double planned_theta_diff = abs(last_pose_.theta - yaw);
-    double relative_theta_diff = abs((theta_diff / planned_theta_diff) - 1);
-
-    if(relative_distance_diff > 3 || relative_theta_diff > 3){
-        // something has gone wrong here
-        ROS_ERROR("%s: relative error too extreme: ( %g | %g ).", gazebo_ros_->info(), relative_distance_diff, relative_theta_diff);
+    double relative_theta_diff = 0;
+    if(theta_diff != 0 && planned_theta_diff != 0){
+        relative_theta_diff = abs((theta_diff / planned_theta_diff) - 1);
+    }
+    if(relative_distance_diff == 0 && relative_theta_diff == 0){
+        //nothing happened
         return;
     }
+    /*
+    ROS_INFO("%s: dist %g\t(%g\t%g)", gazebo_ros_->info(), relative_distance_diff, distance, planned_distance);
+    ROS_INFO("%s: angl %g\t(%g\t%g)", gazebo_ros_->info(), relative_theta_diff, theta_diff, planned_theta_diff);
+    */
+    if(relative_distance_diff > 8 || relative_theta_diff > 8){
+        // something has gone wrong here
+        // ROS_ERROR("%s: relative error too extreme: ( %g | %g ).", gazebo_ros_->info(), relative_distance_diff, relative_theta_diff);
+        return;
+    }
+
+    // update the inherent error estimate
+	this->update_estimate(&linear_estimate_, relative_distance_diff);
+	this->update_estimate(&angular_estimate_, relative_theta_diff);
     
     sphero_error_mapping::error_insert mappingService;
     mappingService.request.pose.x = pose_.x;
@@ -420,11 +435,21 @@ void GazeboSpheroController::publishDiff() {
     }
 }
 
+void GazeboSpheroController::update_estimate(KalmanParams *estimate, double measurement) {
+	// compute the kalman gain
+	double k = estimate->P / ( estimate->P + estimate->R);
+	// update the estimation
+	estimate->X = estimate->X + (k * (measurement - estimate->X));
+	// update the estimation uncertainty
+	estimate->P = (1 - k) * estimate->P;
+}
+
 void GazeboSpheroController::publishPosition()
 {
+    // save the previous pose for tracking
+    last_pose_ = pose_;
     // get the position from the simulation
     math::Pose3d world_pose = parent->WorldPose();
-    last_pose_ = pose_;
     pose_.x = world_pose.Pos().X();
     pose_.y = world_pose.Pos().Y();
     // get the orientation from the simulation

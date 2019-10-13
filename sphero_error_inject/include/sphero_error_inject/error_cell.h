@@ -8,9 +8,9 @@ namespace spheroSim {
 	class ErrorCell {
 		public:
 			ErrorCell(): linearError(0), angularError(0) {};
-			ErrorCell(float lin, float ang): linearError(lin), angularError(ang) {};
-			float linearError;
-			float angularError;
+			ErrorCell(double lin, double ang): linearError(lin), angularError(ang) {};
+			double linearError;
+			double angularError;
 	};
 }
 
