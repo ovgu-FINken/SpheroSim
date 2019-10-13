@@ -14,7 +14,7 @@
 
 using namespace sphero_error_mapping;
 
-const int SCALE_FACTOR = 20;
+const int SCALE_FACTOR = 10;
 const int MAPSIZE_HORIZONTAL = 3 * SCALE_FACTOR;
 const int MAPSIZE_VERTICAL = 4 * SCALE_FACTOR;
 

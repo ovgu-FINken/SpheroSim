@@ -402,6 +402,12 @@ void GazeboSpheroController::publishDiff() {
     double theta_diff = abs(last_pose_.theta - pose_.theta);
     double planned_theta_diff = abs(last_pose_.theta - yaw);
     double relative_theta_diff = abs((theta_diff / planned_theta_diff) - 1);
+
+    if(relative_distance_diff > 3 || relative_theta_diff > 3){
+        // something has gone wrong here
+        ROS_ERROR("%s: relative error too extreme: ( %g | %g ).", gazebo_ros_->info(), relative_distance_diff, relative_theta_diff);
+        return;
+    }
     
     sphero_error_mapping::error_insert mappingService;
     mappingService.request.pose.x = pose_.x;

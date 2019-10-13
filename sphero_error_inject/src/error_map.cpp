@@ -7,6 +7,10 @@
 
 namespace spheroSim {
 
+	const int SCALE_FACTOR = 10;
+	const int MAPSIZE_HORIZONTAL = 3 * SCALE_FACTOR;
+	const int MAPSIZE_VERTICAL = 4 * SCALE_FACTOR;
+
 	ErrorMap* ErrorMap::instance = 0;
 
 	ErrorMap* ErrorMap::getInstance() {
@@ -18,17 +22,13 @@ namespace spheroSim {
 
 	// default constructor
 	ErrorMap::ErrorMap() {
-		// The size of the map, must match the file fed into the navStack
-		const int xSize = 60;
-		const int ySize = 80;
 		// TODO: make this configurable
 		const int numSpikes = 10;
 		// initialize the map
-		ErrorCell map[xSize * ySize];
-		ROS_INFO("starting to generate error spikes...");
+		ErrorCell map[MAPSIZE_HORIZONTAL * MAPSIZE_VERTICAL];
 		// randomly generate positions for "Distotion-Spikes"
-	    std::uniform_real_distribution<float> unifX(0, xSize-1);
-	    std::uniform_real_distribution<float> unifY(0, ySize-1);
+	    std::uniform_real_distribution<float> unifX(0, MAPSIZE_HORIZONTAL-1);
+	    std::uniform_real_distribution<float> unifY(0, MAPSIZE_VERTICAL-1);
 	    std::default_random_engine re;
 	    geometry_msgs::Pose2D errorPositions[numSpikes];
 	    for (int i = 0; i < numSpikes; ++i)
@@ -46,8 +46,8 @@ namespace spheroSim {
 		linearFile.open("/home/stephan/spheroSim/sphero_error_init_" + std::to_string(now) + "_linear.csv");
 		angularFile.open("/home/stephan/spheroSim/sphero_error_init_" + std::to_string(now) + "_angular.csv");
 		// iterate over the map and calculate each cell's error by it's distances to all spikes
-		for (int y = 0; y < ySize; ++y) {
-			for (int x = 0; x < xSize; ++x) {
+		for (int y = 0; y < MAPSIZE_VERTICAL; ++y) {
+			for (int x = 0; x < MAPSIZE_HORIZONTAL; ++x) {
 				// get the distance to the spikes
 				float linearError = 0;
 				float angularError = 0;
@@ -72,10 +72,8 @@ namespace spheroSim {
 
 	ErrorCell ErrorMap::GetPositionError(geometry_msgs::Pose2D pose) {
 		// The size of the map, must match the file fed into the navStack
-		const int xSize = 60;
-		const int ySize = 80;
-		const int index = (xSize * (pose.y * 20)) + (pose.x * 20);
-		if(index > (xSize * ySize)) {
+		const int index = (MAPSIZE_HORIZONTAL * (pose.y * SCALE_FACTOR)) + (pose.x * SCALE_FACTOR);
+		if(index > (MAPSIZE_HORIZONTAL * MAPSIZE_VERTICAL)) {
 			//TODO: Error, out of bounds
 			ROS_ERROR("Error injection for requested pose is out of bounds!");
 		}
