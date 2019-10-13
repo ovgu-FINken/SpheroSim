@@ -10,17 +10,17 @@ namespace sphero_error_mapping {
 	class ErrorInformation
 	{
 		public:
-			/// Indicates the propability of this error to be correct.
-			int quality;
-
 			/// The linear component of this error.
-			int linearError;
+			double linearError;
+
+			/// The covariance for the estimation of the linear Error
+			double linearCovariance;
 			
 			/// The angular component of this error.
-			int angularError;
-			
-			/// The time since the error was updated.
-			int age;
+			double angularError;
+
+			/// The covariance for the estimation of the angular Error
+			double angularCovariance;
 	};
 }
 

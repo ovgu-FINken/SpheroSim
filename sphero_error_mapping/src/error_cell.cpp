@@ -1,4 +1,5 @@
 #include <sphero_error_mapping/error_cell.h>
+#include "ros/ros.h"
 
 using namespace sphero_error_mapping;
 
@@ -8,34 +9,22 @@ using namespace sphero_error_mapping;
  */
 void ErrorCell::insert_report(ErrorInformation* error){
 	history.push_back(*error);
+	this->update_estimate(&(this->linearEstimate), error->linearError);
+	this->update_estimate(&(this->angularEstimate), error->angularError);
 }
 
 /**
- * Aggregates the available error information for a single cell of the map.
- * \param historyLength The number of events in the history to take into account for the calculation.
- * \return The aggregated error information of the cell.
- */
-ErrorInformation* ErrorCell::aggregateError(int historyLength){
-	int limit = history.size();
-	if(historyLength > 0 && historyLength < limit){
-		limit = historyLength;
-	}
-	ErrorInformation* error = new ErrorInformation();
-	// the more measurements are takent into account, the closer the resulting quality is to 1
-	error->quality = 1 - (1/limit);
-	// compute the mean, since we have exact values.
-	// TODO: compute via Kalman Filter for un-precise measurements
-	float linearError = 0;
-	float angularError = 0;
-	for (int i = 0; i < limit; ++i)
-	{
-		ErrorInformation item = history[i];
-		linearError += item.linearError;
-		angularError += item.angularError;
-	}
-	error->linearError = linearError / limit;
-	error->angularError = angularError / limit;
-	return error;
+ * Updates a kalman estimation.
+ * \param estimate The estimation to update.
+ * \param measurement The new measurement to update the estimation with.
+ * */
+void ErrorCell::update_estimate(KalmanParams *estimate, double measurement) {
+	// compute the kalman gain
+	double k = estimate->P / ( estimate->P + estimate->R);
+	// update the estimation
+	estimate->X = estimate->X + (k * (measurement - estimate->X));
+	// update the estimation uncertainty
+	estimate->P = (1 - k) * estimate->P;
 }
 
 /**
@@ -43,5 +32,10 @@ ErrorInformation* ErrorCell::aggregateError(int historyLength){
  * \return The error information of the cell.
  */
 ErrorInformation* ErrorCell::get_error(){
-	return this->aggregateError(-1);
+	ErrorInformation* result = new ErrorInformation();
+	result->linearError = this->linearEstimate.X;
+	result->linearCovariance = this->linearEstimate.P;
+	result->angularError = this->angularEstimate.X;
+	result->angularCovariance = this->angularEstimate.P;
+	return result;
 }

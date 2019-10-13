@@ -55,5 +55,4 @@ int main(int argc, char **argv) {
 	}
 
 	randomwalk(client);
-	ros::spin();
 }

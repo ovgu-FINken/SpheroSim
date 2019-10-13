@@ -2,7 +2,10 @@
 #define ErrorCell_H
 
 #include <sphero_error_mapping/error_information.h>
+#include <sphero_error_mapping/kalman_params.h>
 #include <vector>
+
+#include <eigen3/Eigen/Dense>
 
 namespace sphero_error_mapping {
 
@@ -16,8 +19,18 @@ namespace sphero_error_mapping {
 			
 			/// Computes the error from the history of error reports on this cell with respect to the maximum age of reports.
 			ErrorInformation* aggregateError(int);
+
+			/// Updates a kalman estimation.
+			void update_estimate(KalmanParams*, double);
+
+			/// the estimation for linear error
+			KalmanParams linearEstimate;
+
+			/// the estimation for angular error
+			KalmanParams angularEstimate;
+
 		public:
-			ErrorCell(int x, int y): x(x), y(y) {};
+			ErrorCell(int x, int y): x(x), y(y), linearEstimate(1, 2, 0.1e-5, 0.2), angularEstimate(1, 2, 0.1e-5, 0.2) {};
 			
 			/// The position of the cell on the map in x dimension
 			int x;
