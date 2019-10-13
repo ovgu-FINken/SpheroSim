@@ -4,7 +4,7 @@
   <link name="base_link">
     <inertial>
       <mass value="0.15" />
-      <inertia ixx="0.54" ixy="0.0" ixz="0.0" iyy="0.54" iyz="0.0" izz="0.54" />
+      <inertia ixx="500.54" ixy="0.0" ixz="0.0" iyy="500.54" iyz="0.0" izz="500.54" />
       <origin  rpy="0 0 0" xyz="0 0 -0.025"/>
     </inertial>
     <collision>
@@ -21,12 +21,12 @@
     </visual>
   </link>
 
-  <joint name="rotation_joint" type="revolute">
+  <joint name="rotation_joint" type="continuous">
     <origin rpy="0 0 0" xyz="0 0 0" />
     <parent link="base_link" />
     <child link="base_rotation_link" />
     <axis xyz="0 0 1" />
-    <limit effort="18.85" lower="-1e+16" upper="1e+16" velocity="1.57" />
+    <limit effort="18.85" velocity="1.57" />
   </joint>
 
   <link name="base_rotation_link">

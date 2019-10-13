@@ -18,8 +18,8 @@ void randomwalk(MoveBaseClient &client) {
   double y = 0.0;
   random_device rd;  //Will be used to obtain a seed for the random number engine
   mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-  uniform_real_distribution<double> unif_x(0,40);
-  uniform_real_distribution<double> unif_y(0,30);
+  uniform_real_distribution<double> unif_x(0,3);
+  uniform_real_distribution<double> unif_y(0,4);
   while(ros::ok()) {
 	x = unif_x(gen);
 	y = unif_y(gen);

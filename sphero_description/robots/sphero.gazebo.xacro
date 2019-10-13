@@ -19,7 +19,7 @@
     <kd>10.0</kd>
     <mu1>0.04</mu1>
     <mu2>0.04</mu2>
-    <fdir1>1 0 0</fdir1>
+    <fdir1>0 0 1</fdir1>
     <maxVel>1.0</maxVel>
     <minDepth>0.0005</minDepth>
   </gazebo>
@@ -75,7 +75,7 @@
       <frameId>base_link</frameId>
       <gaussianNoise>0</gaussianNoise>
       <rpyOffsets>0 0 0</rpyOffsets>
-      <updateRate>50.0</updateRate>
+      <updateRate>50</updateRate>
       <alwaysOn>true</alwaysOn>
     </plugin>
   </gazebo>
