@@ -77,6 +77,7 @@ namespace gazebo {
       void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& cmd_msg);
       void getWheelVelocities();
       void publishDiff();
+      void updatePrediction(double seconds_since_last_update);
       void publishOdometry();
       void publishPosition();
       void publishWheelTF(); /// publishes the wheel tf's
@@ -85,6 +86,7 @@ namespace gazebo {
       void UpdateOdometryEncoder();
       void report_error(const ros::TimerEvent& event);
       void update_estimate(KalmanParams *estimate, double measurement);
+      Eigen::Vector3d calculateCurveMovement(double timeInSeconds, geometry_msgs::Pose2D pose, double x, double rot);
 
       GazeboRosPtr gazebo_ros_;
       physics::ModelPtr parent;
@@ -114,8 +116,8 @@ namespace gazebo {
       boost::shared_ptr<tf::TransformBroadcaster> transform_broadcaster_;
       sensor_msgs::JointState joint_state_;
       nav_msgs::Odometry odom_;
-      nav_msgs::Odometry last_odom_;
       geometry_msgs::Pose2D pose_;
+      geometry_msgs::Pose2D predict_pose_;
       geometry_msgs::Pose2D last_pose_;
       std::string tf_prefix_;
 
