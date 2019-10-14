@@ -144,11 +144,11 @@ void GazeboSpheroController::Load(physics::ModelPtr _parent, sdf::ElementPtr _sd
     this->update_connection_ = event::Events::ConnectWorldUpdateBegin ( boost::bind ( &GazeboSpheroController::UpdateChild, this ) );
 
     // initialize prediction
-    math::Pose world_pose = parent->GetWorldPose();
-    predict_pose_.x = world_pose.pos.x;
-    predict_pose_.y = world_pose.pos.y;
+    math::Pose3d world_pose = parent->WorldPose();
+    predict_pose_.x = world_pose.Pos().X();
+    predict_pose_.y = world_pose.Pos().Y();
     // get the orientation from the simulation
-    double theta = world_pose.rot.GetYaw();
+    double theta = world_pose.Rot().Yaw();
     predict_pose_.theta = theta * 180;
 }
 
@@ -395,23 +395,14 @@ Eigen::Vector3d GazeboSpheroController::calculateCurveMovement(double timeInSeco
 void GazeboSpheroController::publishDiff() {
 
     double distance = sqrt(pow(last_pose_.x - pose_.x, 2) + pow(last_pose_.y - pose_.y, 2));
-    double planned_distance = sqrt(pow(last_pose_.x - predict_pose_.pose.pose.position.x, 2) + pow(last_pose_.y - predict_pose_.pose.pose.position.y, 2));
+    double planned_distance = sqrt(pow(last_pose_.x - predict_pose_.x, 2) + pow(last_pose_.y - predict_pose_.y, 2));
     double relative_distance_diff = 0;
     if(distance != 0 && planned_distance != 0) {
         // ROS_INFO("%s: calculated distance %g and planned distance %g", gazebo_ros_->info(), distance, planned_distance);
         relative_distance_diff = abs((distance / planned_distance) - 1);
     }
-    
-    // the incoming geometry_msgs::Quaternion is transformed to a tf::Quaterion
-    tf::Quaternion quat;
-    tf::quaternionMsgToTF(predict_pose_.pose.pose.orientation, quat);
-
-    // the tf::Quaternion has a method to acess roll pitch and yaw
-    double roll, pitch, yaw;
-    tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
-
     double theta_diff = abs(last_pose_.theta - pose_.theta);
-    double planned_theta_diff = abs(last_pose_.theta - yaw);
+    double planned_theta_diff = abs(last_pose_.theta - predict_pose_.theta);
     double relative_theta_diff = 0;
     if(theta_diff != 0 && planned_theta_diff != 0){
         relative_theta_diff = abs((theta_diff / planned_theta_diff) - 1);
