@@ -134,6 +134,14 @@ void GazeboSpheroController::Load(physics::ModelPtr _parent, sdf::ElementPtr _sd
 
     // listen to the update event (broadcast every simulation iteration)
     this->update_connection_ = event::Events::ConnectWorldUpdateBegin ( boost::bind ( &GazeboSpheroController::UpdateChild, this ) );
+
+    // initialize prediction
+    math::Pose world_pose = parent->GetWorldPose();
+    predict_pose_.x = world_pose.pos.x;
+    predict_pose_.y = world_pose.pos.y;
+    // get the orientation from the simulation
+    double theta = world_pose.rot.GetYaw();
+    predict_pose_.theta = theta * 180;
 }
 
 void GazeboSpheroController::Reset()
@@ -220,6 +228,7 @@ void GazeboSpheroController::UpdateChild()
             publishOdometry();
             publishPosition();
             publishDiff();
+            updatePrediction(seconds_since_last_update);
         }
         if (publishWheelTF_) {
             publishWheelTF();
@@ -289,8 +298,8 @@ void GazeboSpheroController::getWheelVelocities()
     errorClient_.call(errorService);
     linearFactor += errorService.response.linearError;
     angularFactor += errorService.response.angularError;
-    double vr = x_ * linearFactor;
-    double va = rot_ * angularFactor;
+    double vr = x_;// * linearFactor;
+    double va = rot_;// * angularFactor;
     // hand the movement command over to gazebo
     wheel_speed_[LEFT] = vr;
     wheel_speed_[RIGHT] = va * wheel_separation_ / 2.0;
@@ -400,6 +409,54 @@ void GazeboSpheroController::publishDiff() {
     mappingService.request.angularError = relative_theta_diff;
     mappingService.request.robotId = '0';
     reportClient_.call(mappingService);
+}
+
+void GazeboSpheroController::updatePrediction(double seconds_since_last_update) {
+
+
+    if(x_ == 0 && rot_ == 0) {
+        // no movement, no prediction update
+        return;
+    }
+    if(x_ == 0) {
+        // no movement is currently happening, so odom is just the current position
+        predict_pose_.theta = pose_.theta + (rot_ * seconds_since_last_update);
+        predict_pose_.x = pose_.x;
+        predict_pose_.y = pose_.y;
+    } else if (rot_ == 0) {
+        // no turning happens, just movement in a straight line
+        double distance = x_ * seconds_since_last_update;
+        predict_pose_.x = (distance * cos(pose_.theta)) + pose_.x;
+        predict_pose_.y = (distance * sin(pose_.theta)) + pose_.y;
+        predict_pose_.theta = pose_.theta;
+    } else {
+        // update the prediction for the next timestep
+        double currentOrientation = pose_.theta;
+        // rot_ specifies how long it will take for a full circle (angular velocity in rad/s)
+        // x_ specifies how fast the robot travels trough the circle (linear velocity in m/s)
+        // x_ / rot_ specifies the radius of the circle
+        double fullTurn = 3.14159265358979323846 * 2;
+        // specifies how long a full circle will take
+        double fullTurnTime = fullTurn / rot_;
+        double circumference = fullTurnTime * x_;
+        double radius = circumference / fullTurn; // = x_ / rot_;
+        double angle = rot_ * seconds_since_last_update;
+        // instantanious center of curvature - the point the current curve revolves around
+        double iccX = pose_.x - (radius * sin(currentOrientation));
+        double iccY = pose_.y + (radius * cos(currentOrientation));
+        Eigen::Matrix3d rotateArountIcc;
+        rotateArountIcc <<  cos(angle), -1 * sin(angle), 0,
+                            sin(angle), cos(angle), 0,
+                            0, 0, 1;
+        Eigen::Vector3d translateIccToOrigin(pose_.x - iccX, pose_.y - iccY, currentOrientation);
+        Eigen::Vector3d translateIccBack(iccX, iccY, angle);
+        Eigen::Vector3d odomTarget = (rotateArountIcc * translateIccToOrigin) + translateIccBack;
+        predict_pose_.x = odomTarget.x();
+        predict_pose_.y = odomTarget.y();
+        predict_pose_.theta = odomTarget.z();
+    }
+    // ROS_INFO("%s: current: %g, %g | %g", gazebo_ros_->info(), pose_.x, pose_.y, pose_.theta);
+    // ROS_INFO("%s: predict: %g, %g | %g", gazebo_ros_->info(), predict_pose_.x, predict_pose_.y, predict_pose_.theta);
 }
 
 void GazeboSpheroController::publishPosition()

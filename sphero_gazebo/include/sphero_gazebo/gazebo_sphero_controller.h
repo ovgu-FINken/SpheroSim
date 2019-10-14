@@ -75,6 +75,7 @@ namespace gazebo {
       void cmdVelCallback(const geometry_msgs::Twist::ConstPtr& cmd_msg);
       void getWheelVelocities();
       void publishDiff();
+      void updatePrediction(double seconds_since_last_update);
       void publishOdometry();
       void publishPosition();
       void publishWheelTF(); /// publishes the wheel tf's
@@ -110,6 +111,7 @@ namespace gazebo {
       sensor_msgs::JointState joint_state_;
       nav_msgs::Odometry odom_;
       geometry_msgs::Pose2D pose_;
+      geometry_msgs::Pose2D predict_pose_;
       geometry_msgs::Pose2D last_pose_;
       std::string tf_prefix_;
 
