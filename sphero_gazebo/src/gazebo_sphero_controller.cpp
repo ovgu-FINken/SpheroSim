@@ -322,7 +322,6 @@ void GazeboSpheroController::QueueThread()
     }
 }
 
-
 /**
  * Calculates the odometry for the current step based on the current movement and the last known position.
  * http://www.cs.columbia.edu/~allen/F15/NOTES/icckinematics.pdf
@@ -349,27 +348,7 @@ void GazeboSpheroController::UpdateOdometryEncoder()
             );
         qt.setRPY(0, 0, pose_.theta);
     } else {
-        double currentOrientation = pose_.theta;
-        // rot_ specifies how long it will take for a full circle (angular velocity in rad/s)
-        // x_ specifies how fast the robot travels trough the circle (linear velocity in m/s)
-        // x_ / rot_ specifies the radius of the circle
-        double fullTurn = 3.14159265358979323846 * 2;
-        // specifies how long a full circle will take
-        double fullTurnTime = fullTurn / rot_;
-        double circumference = fullTurnTime * x_;
-        double radius = circumference / fullTurn; // = x_ / rot_;
-        double angle = rot_ * seconds_since_last_update;
-        // instantanious center of curvature - the point the current curve revolves around
-        double iccX = pose_.x - (radius * sin(currentOrientation));
-        double iccY = pose_.y + (radius * cos(currentOrientation));
-        Eigen::Matrix3d rotateArountIcc;
-        rotateArountIcc <<  cos(angle), -1 * sin(angle), 0,
-                            sin(angle), cos(angle), 0,
-                            0, 0, 1;
-        Eigen::Vector3d translateIccToOrigin(pose_.x - iccX, pose_.y - iccY, currentOrientation);
-        Eigen::Vector3d translateIccBack(iccX, iccY, angle);
-        Eigen::Vector3d odomTarget = (rotateArountIcc * translateIccToOrigin) + translateIccBack;
-
+        Eigen::Vector3d odomTarget = this->calculateCurveMovement(seconds_since_last_update, pose_,  x_, rot_);
         vt = tf::Vector3(odomTarget.x(), odomTarget.y(), 0 );
         qt.setRPY(0, 0, odomTarget.z());
     }
@@ -382,6 +361,30 @@ void GazeboSpheroController::UpdateOdometryEncoder()
     odom_.pose.pose.orientation.y = qt.y();
     odom_.pose.pose.orientation.z = qt.z();
     odom_.pose.pose.orientation.w = qt.w();
+}
+
+Eigen::Vector3d GazeboSpheroController::calculateCurveMovement(double timeInSeconds, geometry_msgs::Pose2D pose, double x, double rot) {
+    double currentOrientation = pose.theta;
+    // rot_ specifies how long it will take for a full circle (angular velocity in rad/s)
+    // x_ specifies how fast the robot travels trough the circle (linear velocity in m/s)
+    // x_ / rot_ specifies the radius of the circle
+    double fullTurn = 3.14159265358979323846 * 2;
+    // specifies how long a full circle will take
+    double fullTurnTime = fullTurn / rot;
+    double circumference = fullTurnTime * x;
+    double radius = circumference / fullTurn; // = x_ / rot_;
+    double angle = rot * timeInSeconds;
+    // instantanious center of curvature - the point the current curve revolves around
+    double iccX = pose.x - (radius * sin(currentOrientation));
+    double iccY = pose.y + (radius * cos(currentOrientation));
+    Eigen::Matrix3d rotateArountIcc;
+    rotateArountIcc <<  cos(angle), -1 * sin(angle), 0,
+                        sin(angle), cos(angle), 0,
+                        0, 0, 1;
+    Eigen::Vector3d translateIccToOrigin(pose.x - iccX, pose.y - iccY, currentOrientation);
+    Eigen::Vector3d translateIccBack(iccX, iccY, angle);
+    Eigen::Vector3d odomTarget = (rotateArountIcc * translateIccToOrigin) + translateIccBack;
+    return odomTarget;
 }
 
 void GazeboSpheroController::publishDiff() {
@@ -412,14 +415,11 @@ void GazeboSpheroController::publishDiff() {
 }
 
 void GazeboSpheroController::updatePrediction(double seconds_since_last_update) {
-
-
     if(x_ == 0 && rot_ == 0) {
         // no movement, no prediction update
         return;
-    }
-    if(x_ == 0) {
-        // no movement is currently happening, so odom is just the current position
+    } else if(x_ == 0) {
+        // no linear movement, so odom is just the current position with new orientation
         predict_pose_.theta = pose_.theta + (rot_ * seconds_since_last_update);
         predict_pose_.x = pose_.x;
         predict_pose_.y = pose_.y;
@@ -430,30 +430,10 @@ void GazeboSpheroController::updatePrediction(double seconds_since_last_update) 
         predict_pose_.y = (distance * sin(pose_.theta)) + pose_.y;
         predict_pose_.theta = pose_.theta;
     } else {
-        // update the prediction for the next timestep
-        double currentOrientation = pose_.theta;
-        // rot_ specifies how long it will take for a full circle (angular velocity in rad/s)
-        // x_ specifies how fast the robot travels trough the circle (linear velocity in m/s)
-        // x_ / rot_ specifies the radius of the circle
-        double fullTurn = 3.14159265358979323846 * 2;
-        // specifies how long a full circle will take
-        double fullTurnTime = fullTurn / rot_;
-        double circumference = fullTurnTime * x_;
-        double radius = circumference / fullTurn; // = x_ / rot_;
-        double angle = rot_ * seconds_since_last_update;
-        // instantanious center of curvature - the point the current curve revolves around
-        double iccX = pose_.x - (radius * sin(currentOrientation));
-        double iccY = pose_.y + (radius * cos(currentOrientation));
-        Eigen::Matrix3d rotateArountIcc;
-        rotateArountIcc <<  cos(angle), -1 * sin(angle), 0,
-                            sin(angle), cos(angle), 0,
-                            0, 0, 1;
-        Eigen::Vector3d translateIccToOrigin(pose_.x - iccX, pose_.y - iccY, currentOrientation);
-        Eigen::Vector3d translateIccBack(iccX, iccY, angle);
-        Eigen::Vector3d odomTarget = (rotateArountIcc * translateIccToOrigin) + translateIccBack;
-        predict_pose_.x = odomTarget.x();
-        predict_pose_.y = odomTarget.y();
-        predict_pose_.theta = odomTarget.z();
+        Eigen::Vector3d predictTarget = this->calculateCurveMovement(seconds_since_last_update, pose_,  x_, rot_);
+        predict_pose_.x = predictTarget.x();
+        predict_pose_.y = predictTarget.y();
+        predict_pose_.theta = predictTarget.z();
     }
     // ROS_INFO("%s: current: %g, %g | %g", gazebo_ros_->info(), pose_.x, pose_.y, pose_.theta);
     // ROS_INFO("%s: predict: %g, %g | %g", gazebo_ros_->info(), predict_pose_.x, predict_pose_.y, predict_pose_.theta);

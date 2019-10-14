@@ -83,6 +83,7 @@ namespace gazebo {
       void QueueThread();
       void UpdateOdometryEncoder();
       double getErrorFactor(double limit);
+      Eigen::Vector3d calculateCurveMovement(double timeInSeconds, geometry_msgs::Pose2D pose, double x, double rot);
 
       GazeboRosPtr gazebo_ros_;
       physics::ModelPtr parent;
